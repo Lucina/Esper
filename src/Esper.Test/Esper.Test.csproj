@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Esper.Misaka\Esper.Misaka.csproj" />
     <ProjectReference Include="..\Esper.Zstandard\Esper.Zstandard.csproj" />
+    <ProjectReference Include="..\Esper\Esper.csproj" />
   </ItemGroup>
 
 </Project>
