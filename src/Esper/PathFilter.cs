@@ -147,8 +147,7 @@ namespace Esper
             int baseIdx = 0;
             int curTextIdx = 0;
             int curPatternIdx = 0;
-            Span<char> rGroup = stackalloc char[256];
-            while (true)
+            while (curTextIdx < text.Length)
             {
                 bool keep = true;
                 char c = pattern[curPatternIdx];
@@ -162,7 +161,6 @@ namespace Esper
                         int eLoc = pattern.Slice(curPatternIdx).IndexOf(']'); // No escaping concept
                         if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
                         eLoc--; // Now count of elements
-                        if (eLoc > rGroup.Length) throw new ApplicationException("Group too long");
                         if (pattern.Slice(curPatternIdx + 1, eLoc).IndexOf(text[curPatternIdx]) != -1)
                         {
                             curTextIdx++;
@@ -190,9 +188,11 @@ namespace Esper
 
                 baseIdx++;
                 if (baseIdx >= text.Length) return -1;
-                curTextIdx = 0;
+                curTextIdx = baseIdx;
                 curPatternIdx = 0;
             }
+
+            return -1;
         }
 
         private static Func<ReadOnlyMemory<string>, FilterType> F_Any(Func<ReadOnlyMemory<string>, FilterType> after) =>
