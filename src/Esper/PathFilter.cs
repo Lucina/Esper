@@ -13,8 +13,9 @@ namespace Esper
         /// Generate filter for filter strings
         /// </summary>
         /// <param name="filterStrings"></param>
+        /// <param name="infiniteRoot">Filters only verify tail</param>
         /// <returns>Filter</returns>
-        public static Filter GenerateFilter(IEnumerable<string> filterStrings)
+        public static Filter GenerateFilter(IEnumerable<string> filterStrings, bool infiniteRoot = false)
         {
             var filters = new List<Func<ReadOnlyMemory<string>, FilterType>>();
             foreach (string add in filterStrings)
@@ -26,9 +27,9 @@ namespace Esper
                         sc++;
                     else
                         break;
-                string xAdd = sc == 0 ? add : add.Substring(sc);
+                string xAdd = sc == 0 ? add.StartsWith("\\") ? add.Substring(1) : add : add.Substring(sc);
                 if (string.IsNullOrWhiteSpace(xAdd)) continue; // Blank filter - ignore
-                var xAddSplit = xAdd.Split('/', '\\');
+                var xAddSplit = xAdd.Split('/');
                 Func<ReadOnlyMemory<string>, FilterType> func = F_None; // Default deny
                 for (int i = xAddSplit.Length - 1; i >= 0; i--)
                 {
@@ -57,12 +58,21 @@ namespace Esper
                             break;
                         }
                         default:
-                            // Simple match
-                            func = F_Match(xAddSplit[i], func);
+                            if (xAddSplit[i] == string.Empty)
+                            {
+                                if (i == xAddSplit.Length - 1)
+                                    func = F_DeepAny(func == F_None ? F_Any : func);
+                            }
+                            else
+                                // Simple match
+                                func = F_Match(xAddSplit[i], func == F_None ? F_Any : func);
+
                             break;
                     }
                 }
 
+                if (infiniteRoot && !xAdd.StartsWith("/"))
+                    func = F_DeepAny(func);
                 // If odd number of ! is prefixed, invert filter
                 if (sc % 2 == 1)
                     func = F_Invert(func);
@@ -74,17 +84,16 @@ namespace Esper
 
         private static FilterType F_Any(ReadOnlyMemory<string> arg) => FilterType.Affirm;
 
-        private static FilterType F_None(ReadOnlyMemory<string> arg) => FilterType.NoMatch;
+        private static FilterType F_None(ReadOnlyMemory<string> arg) =>
+            arg.Length == 0 ? FilterType.Affirm : FilterType.NoMatch;
 
         private static Func<ReadOnlyMemory<string>, FilterType>
             F_Match(string pattern, Func<ReadOnlyMemory<string>, FilterType> after)
         {
-            //var altMatch = $"^{pattern.Replace("*", @"\S+")}$";
+            if (pattern.Length == 0) return x => x.Length == 0 ? FilterType.Affirm : FilterType.NoMatch;
             // #FrontierSetter
-            int sCount1 = 0;
+            int sCount1 = 1;
             int sLast = -1;
-            if (pattern[0] == '*')
-                sCount1++;
             for (int i = 0; i < pattern.Length; i++)
             {
                 if (pattern[i] == '*') continue;
@@ -98,12 +107,11 @@ namespace Esper
 
             int fixedLength = GetFixedLength(pattern.AsSpan());
 
-            if (sCount1 == 0)
-                return path =>
-                    FixedIndexOf(path.Span[0].AsSpan(), pattern.AsSpan()) == 0 &&
-                    fixedLength == path.Span[0].Length
-                        ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
-                        : FilterType.NoMatch;
+            if (sCount1 == 1)
+                return path => FixedIndexOf(path.Span[0].AsSpan(), pattern.AsSpan()) == 0 &&
+                               fixedLength == path.Span[0].Length
+                    ? after.Invoke(path.Slice(1))
+                    : FilterType.NoMatch;
 
             var info = new int[sCount1 * 3];
             // State buffer, 3 bytes per split
@@ -143,10 +151,12 @@ namespace Esper
                     if (idx == sCount - 1)
                         // Current is match if not final pattern or if hit end of string (valid since case of 1 split is already handled)
                         if (info[idx * 3] + info[idx * 3 + 1] != patternSpan.Length ||
-                            pos + info[idx * 3 + 2] == strSpan.Length)
-                            return path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm;
-                        else return FilterType.NoMatch;
-                    sLoc += info[idx * 2 + 1];
+                            sLoc + pos + info[idx * 3 + 2] == strSpan.Length)
+                            return after.Invoke(path.Slice(1));
+                        else
+                            return FilterType.NoMatch;
+
+                    sLoc += info[idx * 3 + 2];
                     idx++;
                 }
             };
