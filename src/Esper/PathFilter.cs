@@ -13,10 +13,11 @@ namespace Esper
         /// Generate filter for filter strings
         /// </summary>
         /// <param name="filterStrings"></param>
+        /// <param name="infiniteRoot">Filters only verify tail</param>
         /// <returns>Filter</returns>
-        public static Filter GenerateFilter(IEnumerable<string> filterStrings)
+        public static Filter GenerateFilter(IEnumerable<string> filterStrings, bool infiniteRoot = false)
         {
-            var filters = new List<Func<Memory<string>, FilterType>>();
+            var filters = new List<Func<ReadOnlyMemory<string>, FilterType>>();
             foreach (string add in filterStrings)
             {
                 // Get any leading ! to ignore for main filters
@@ -26,14 +27,16 @@ namespace Esper
                         sc++;
                     else
                         break;
-                string xAdd = sc == 0 ? add : add.Substring(sc);
+                string xAdd = sc == 0 ? add.StartsWith("\\") ? add.Substring(1) : add : add.Substring(sc);
                 if (string.IsNullOrWhiteSpace(xAdd)) continue; // Blank filter - ignore
-                var xAddSplit = xAdd.Split('/', '\\');
-                Func<Memory<string>, FilterType> func = F_None; // Default deny
+                var xAddSplit = xAdd.Split('/');
+                Func<ReadOnlyMemory<string>, FilterType> func = F_None; // Default deny
                 for (int i = xAddSplit.Length - 1; i >= 0; i--)
                 {
-                    switch (xAddSplit[i]) {
-                        case "**": {
+                    switch (xAddSplit[i])
+                    {
+                        case "**":
+                        {
                             // Make sure any sequential * / ** are handled together
                             int j = i - 1;
                             while (j >= 0 && (xAddSplit[j] == "**" || xAddSplit[j] == "*"))
@@ -43,7 +46,8 @@ namespace Esper
                             i = j + 1;
                             break;
                         }
-                        case "*": {
+                        case "*":
+                        {
                             // Make sure any sequential * / ** are handled together
                             int j = i - 1;
                             while (j >= 0 && (xAddSplit[j] == "**" || xAddSplit[j] == "*"))
@@ -54,12 +58,21 @@ namespace Esper
                             break;
                         }
                         default:
-                            func = F_Match(xAddSplit[i], func);
-                            // Simple regex match
+                            if (xAddSplit[i] == string.Empty)
+                            {
+                                if (i == xAddSplit.Length - 1)
+                                    func = F_DeepAny(func == F_None ? F_Any : func);
+                            }
+                            else
+                                // Simple match
+                                func = F_Match(xAddSplit[i], func == F_None ? F_Any : func);
+
                             break;
                     }
                 }
 
+                if (infiniteRoot && !xAdd.StartsWith("/"))
+                    func = F_DeepAny(func);
                 // If odd number of ! is prefixed, invert filter
                 if (sc % 2 == 1)
                     func = F_Invert(func);
@@ -69,19 +82,18 @@ namespace Esper
             return new Filter {Filters = filters};
         }
 
-        private static FilterType F_Any(Memory<string> arg) => FilterType.Affirm;
+        private static FilterType F_Any(ReadOnlyMemory<string> arg) => FilterType.Affirm;
 
-        private static FilterType F_None(Memory<string> arg) => FilterType.NoMatch;
+        private static FilterType F_None(ReadOnlyMemory<string> arg) =>
+            arg.Length == 0 ? FilterType.Affirm : FilterType.NoMatch;
 
-        private static Func<Memory<string>, FilterType>
-            F_Match(string pattern, Func<Memory<string>, FilterType> after)
+        private static Func<ReadOnlyMemory<string>, FilterType>
+            F_Match(string pattern, Func<ReadOnlyMemory<string>, FilterType> after)
         {
-            //var altMatch = $"^{pattern.Replace("*", @"\S+")}$";
+            if (pattern.Length == 0) return x => x.Length == 0 ? FilterType.Affirm : FilterType.NoMatch;
             // #FrontierSetter
-            int sCount1 = 0;
+            int sCount1 = 1;
             int sLast = -1;
-            if (pattern[0] == '*')
-                sCount1++;
             for (int i = 0; i < pattern.Length; i++)
             {
                 if (pattern[i] == '*') continue;
@@ -93,12 +105,19 @@ namespace Esper
             if (sLast != pattern.Length - 1)
                 sCount1++;
 
-            if (sCount1 == 0)
-                return path => string.Equals(path.Span[0], pattern, StringComparison.InvariantCulture)
-                    ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
+            int fixedLength = GetFixedLength(pattern.AsSpan());
+
+            if (sCount1 == 1)
+                return path => FixedIndexOf(path.Span[0].AsSpan(), pattern.AsSpan()) == 0 &&
+                               fixedLength == path.Span[0].Length
+                    ? after.Invoke(path.Slice(1))
                     : FilterType.NoMatch;
 
-            var info = new int[sCount1 * 2];
+            var info = new int[sCount1 * 3];
+            // State buffer, 3 bytes per split
+            // 0: Offset of pattern
+            // 1: Length of pattern
+            // 2: Fixed length of input
 
             int idx1 = 0;
             sLast = -1;
@@ -108,12 +127,15 @@ namespace Esper
                 if (sLast + 1 != i)
                 {
                     idx1++;
-                    info[idx1 * 2] = i;
+                    info[idx1 * 3] = i;
                 }
 
                 sLast = i;
-                info[idx1 * 2 + 1]++;
+                info[idx1 * 3 + 1]++;
             }
+
+            for (int i = 0; i < sCount1; i++)
+                info[i * 3 + 2] = GetFixedLength(pattern.AsSpan().Slice(info[i * 3], info[i * 3 + 1]));
 
             return path =>
             {
@@ -121,29 +143,112 @@ namespace Esper
                 var patternSpan = pattern.AsSpan();
                 int idx = 0;
                 int sLoc = 0;
-                int sCount = info.Length / 2;
+                int sCount = info.Length / 3;
                 while (true)
                 {
-                    int pos = strSpan.Slice(sLoc).IndexOf(patternSpan.Slice(info[idx * 2], info[idx * 2 + 1]));
+                    int pos = FixedIndexOf(strSpan.Slice(sLoc), patternSpan.Slice(info[idx * 3], info[idx * 3 + 1]));
                     if (pos == -1) return FilterType.NoMatch;
                     if (idx == sCount - 1)
-                        return info[idx * 2] + info[idx * 2 + 1] != patternSpan.Length ||
-                               pos + info[idx * 2 + 1] == strSpan.Length
-                            ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
-                            : FilterType.NoMatch;
-                    sLoc += info[idx * 2 + 1];
+                        // Current is match if not final pattern or if hit end of string (valid since case of 1 split is already handled)
+                        if (info[idx * 3] + info[idx * 3 + 1] != patternSpan.Length ||
+                            sLoc + pos + info[idx * 3 + 2] == strSpan.Length)
+                            return after.Invoke(path.Slice(1));
+                        else
+                            return FilterType.NoMatch;
+
+                    sLoc += info[idx * 3 + 2];
                     idx++;
                 }
             };
         }
 
-        private static Func<Memory<string>, FilterType> F_Any(Func<Memory<string>, FilterType> after) => path =>
+        private static int GetFixedLength(ReadOnlySpan<char> pattern)
         {
-            if (path.Length == 1) return FilterType.Affirm;
-            return after.Invoke(path.Slice(1)) == FilterType.Affirm ? FilterType.Affirm : FilterType.NoMatch;
-        };
+            int count = 0;
+            for (int rCount = 0; rCount < pattern.Length;)
+            {
+                switch (pattern[rCount])
+                {
+                    case '[':
+                        int eLoc = pattern.Slice(rCount).IndexOf(']');
+                        if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
+                        count++;
+                        rCount += eLoc + 1;
+                        break;
+                    default:
+                        count++;
+                        rCount++;
+                        break;
+                }
+            }
 
-        private static Func<Memory<string>, FilterType> F_DeepAny(Func<Memory<string>, FilterType> after) => path =>
+            return count;
+        }
+
+        private static int FixedIndexOf(ReadOnlySpan<char> text, ReadOnlySpan<char> pattern)
+        {
+            if (pattern.Length == 0) return 0;
+            if (text.Length == 0) return -1;
+            int baseIdx = 0;
+            int curTextIdx = 0;
+            int curPatternIdx = 0;
+            while (curTextIdx < text.Length)
+            {
+                bool keep = true;
+                char c = pattern[curPatternIdx];
+                switch (c)
+                {
+                    case '?':
+                        curTextIdx++;
+                        curPatternIdx++;
+                        break;
+                    case '[':
+                        int eLoc = pattern.Slice(curPatternIdx).IndexOf(']'); // No escaping concept
+                        if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
+                        eLoc--; // Now count of elements
+                        if (pattern.Slice(curPatternIdx + 1, eLoc).IndexOf(text[curTextIdx]) != -1)
+                        {
+                            curTextIdx++;
+                            curPatternIdx += eLoc + 2;
+                        }
+                        else
+                            keep = false;
+
+                        break;
+                    default:
+                        if (c == text[curTextIdx])
+                        {
+                            curTextIdx++;
+                            curPatternIdx++;
+                        }
+                        else
+                            keep = false;
+
+                        break;
+                }
+
+                if (curPatternIdx == pattern.Length) return baseIdx;
+
+                if (keep) continue;
+
+                baseIdx++;
+                if (baseIdx >= text.Length) return -1;
+                curTextIdx = baseIdx;
+                curPatternIdx = 0;
+            }
+
+            return -1;
+        }
+
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Any(Func<ReadOnlyMemory<string>, FilterType> after) =>
+            path =>
+            {
+                if (path.Length == 1) return FilterType.Affirm;
+                return after.Invoke(path.Slice(1)) == FilterType.Affirm ? FilterType.Affirm : FilterType.NoMatch;
+            };
+
+        private static Func<ReadOnlyMemory<string>, FilterType> F_DeepAny(
+            Func<ReadOnlyMemory<string>, FilterType> after) => path =>
         {
             for (int i = path.Length - 1; i >= 0; i--)
                 if (after.Invoke(path.Slice(i)) == FilterType.Affirm)
@@ -151,7 +256,8 @@ namespace Esper
             return FilterType.NoMatch;
         };
 
-        private static Func<Memory<string>, FilterType> F_Invert(Func<Memory<string>, FilterType> filter) => path =>
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Invert(
+            Func<ReadOnlyMemory<string>, FilterType> filter) => path =>
             filter.Invoke(path) switch
             {
                 FilterType.Affirm => FilterType.Deny,
@@ -188,7 +294,7 @@ namespace Esper
             /// <summary>
             /// Path filters
             /// </summary>
-            internal List<Func<Memory<string>, FilterType>> Filters;
+            internal List<Func<ReadOnlyMemory<string>, FilterType>> Filters;
 
             /// <summary>
             /// Test relative path for inclusion
