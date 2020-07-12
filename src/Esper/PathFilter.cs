@@ -57,8 +57,8 @@ namespace Esper
                             break;
                         }
                         default:
+                            // Simple match
                             func = F_Match(xAddSplit[i], func);
-                            // Simple regex match
                             break;
                     }
                 }
@@ -96,12 +96,20 @@ namespace Esper
             if (sLast != pattern.Length - 1)
                 sCount1++;
 
-            if (sCount1 == 0)
-                return path => string.Equals(path.Span[0], pattern, StringComparison.InvariantCulture)
-                    ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
-                    : FilterType.NoMatch;
+            int fixedLength = GetFixedLength(pattern.AsSpan());
 
-            var info = new int[sCount1 * 2];
+            if (sCount1 == 0)
+                return path =>
+                    FixedIndexOf(path.Span[0].AsSpan(), pattern.AsSpan()) == 0 &&
+                    fixedLength == path.Span[0].Length
+                        ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
+                        : FilterType.NoMatch;
+
+            var info = new int[sCount1 * 3];
+            // State buffer, 3 bytes per split
+            // 0: Offset of pattern
+            // 1: Length of pattern
+            // 2: Fixed length of input
 
             int idx1 = 0;
             sLast = -1;
@@ -111,12 +119,15 @@ namespace Esper
                 if (sLast + 1 != i)
                 {
                     idx1++;
-                    info[idx1 * 2] = i;
+                    info[idx1 * 3] = i;
                 }
 
                 sLast = i;
-                info[idx1 * 2 + 1]++;
+                info[idx1 * 3 + 1]++;
             }
+
+            for (int i = 0; i < sCount1; i++)
+                info[i * 3 + 2] = GetFixedLength(pattern.AsSpan().Slice(info[i * 3], info[i * 3 + 1]));
 
             return path =>
             {
@@ -124,20 +135,44 @@ namespace Esper
                 var patternSpan = pattern.AsSpan();
                 int idx = 0;
                 int sLoc = 0;
-                int sCount = info.Length / 2;
+                int sCount = info.Length / 3;
                 while (true)
                 {
-                    int pos = FixedIndexOf(strSpan.Slice(sLoc), patternSpan.Slice(info[idx * 2], info[idx * 2 + 1]));
+                    int pos = FixedIndexOf(strSpan.Slice(sLoc), patternSpan.Slice(info[idx * 3], info[idx * 3 + 1]));
                     if (pos == -1) return FilterType.NoMatch;
                     if (idx == sCount - 1)
-                        return info[idx * 2] + info[idx * 2 + 1] != patternSpan.Length ||
-                               pos + info[idx * 2 + 1] == strSpan.Length
-                            ? path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm
-                            : FilterType.NoMatch;
+                        // Current is match if not final pattern or if hit end of string (valid since case of 1 split is already handled)
+                        if (info[idx * 3] + info[idx * 3 + 1] != patternSpan.Length ||
+                            pos + info[idx * 3 + 2] == strSpan.Length)
+                            return path.Length > 1 ? after.Invoke(path.Slice(1)) : FilterType.Affirm;
+                        else return FilterType.NoMatch;
                     sLoc += info[idx * 2 + 1];
                     idx++;
                 }
             };
+        }
+
+        private static int GetFixedLength(ReadOnlySpan<char> pattern)
+        {
+            int count = 0;
+            for (int rCount = 0; rCount < pattern.Length;)
+            {
+                switch (pattern[rCount])
+                {
+                    case '[':
+                        int eLoc = pattern.Slice(rCount).IndexOf(']');
+                        if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
+                        count++;
+                        rCount += eLoc + 1;
+                        break;
+                    default:
+                        count++;
+                        rCount++;
+                        break;
+                }
+            }
+
+            return count;
         }
 
         private static int FixedIndexOf(ReadOnlySpan<char> text, ReadOnlySpan<char> pattern)
@@ -161,7 +196,7 @@ namespace Esper
                         int eLoc = pattern.Slice(curPatternIdx).IndexOf(']'); // No escaping concept
                         if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
                         eLoc--; // Now count of elements
-                        if (pattern.Slice(curPatternIdx + 1, eLoc).IndexOf(text[curPatternIdx]) != -1)
+                        if (pattern.Slice(curPatternIdx + 1, eLoc).IndexOf(text[curTextIdx]) != -1)
                         {
                             curTextIdx++;
                             curPatternIdx += eLoc + 2;

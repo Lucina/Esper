@@ -25,7 +25,10 @@ namespace Esper.Test
                 "the/compromises/*",
                 "hydra/was/founded/on/the_*/belief",
                 "*.cs",
-                "starts_with_this*"
+                "starts_with_this*",
+                "abc?efg",
+                "123[456]789",
+                "tes"
             };
             var f = PathFilter.GenerateFilter(filters);
             Assert.AreEqual(true, f.Test("harry/json.json"));
@@ -49,6 +52,11 @@ namespace Esper.Test
             Assert.AreEqual(false, f.Test("starts_with_thif"));
             Assert.AreEqual(true, f.Test("starts_with_this"));
             Assert.AreEqual(true, f.Test("starts_with_this_plus_more"));
+            Assert.AreEqual(true, f.Test("abcdefg"));
+            Assert.AreEqual(true, f.Test("abcxefg"));
+            Assert.AreEqual(true, f.Test("1235789"));
+            Assert.AreEqual(false, f.Test("1230789"));
+            Assert.AreEqual(false, f.Test("antes"));
 
             var filter2 = new List<string> {"**"};
             var f2 = PathFilter.GenerateFilter(filter2);
