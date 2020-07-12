@@ -16,7 +16,7 @@ namespace Esper
         /// <returns>Filter</returns>
         public static Filter GenerateFilter(IEnumerable<string> filterStrings)
         {
-            var filters = new List<Func<Memory<string>, FilterType>>();
+            var filters = new List<Func<ReadOnlyMemory<string>, FilterType>>();
             foreach (string add in filterStrings)
             {
                 // Get any leading ! to ignore for main filters
@@ -29,7 +29,7 @@ namespace Esper
                 string xAdd = sc == 0 ? add : add.Substring(sc);
                 if (string.IsNullOrWhiteSpace(xAdd)) continue; // Blank filter - ignore
                 var xAddSplit = xAdd.Split('/', '\\');
-                Func<Memory<string>, FilterType> func = F_None; // Default deny
+                Func<ReadOnlyMemory<string>, FilterType> func = F_None; // Default deny
                 for (int i = xAddSplit.Length - 1; i >= 0; i--)
                 {
                     switch (xAddSplit[i]) {
@@ -69,12 +69,12 @@ namespace Esper
             return new Filter {Filters = filters};
         }
 
-        private static FilterType F_Any(Memory<string> arg) => FilterType.Affirm;
+        private static FilterType F_Any(ReadOnlyMemory<string> arg) => FilterType.Affirm;
 
-        private static FilterType F_None(Memory<string> arg) => FilterType.NoMatch;
+        private static FilterType F_None(ReadOnlyMemory<string> arg) => FilterType.NoMatch;
 
-        private static Func<Memory<string>, FilterType>
-            F_Match(string pattern, Func<Memory<string>, FilterType> after)
+        private static Func<ReadOnlyMemory<string>, FilterType>
+            F_Match(string pattern, Func<ReadOnlyMemory<string>, FilterType> after)
         {
             //var altMatch = $"^{pattern.Replace("*", @"\S+")}$";
             // #FrontierSetter
@@ -137,13 +137,13 @@ namespace Esper
             };
         }
 
-        private static Func<Memory<string>, FilterType> F_Any(Func<Memory<string>, FilterType> after) => path =>
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Any(Func<ReadOnlyMemory<string>, FilterType> after) => path =>
         {
             if (path.Length == 1) return FilterType.Affirm;
             return after.Invoke(path.Slice(1)) == FilterType.Affirm ? FilterType.Affirm : FilterType.NoMatch;
         };
 
-        private static Func<Memory<string>, FilterType> F_DeepAny(Func<Memory<string>, FilterType> after) => path =>
+        private static Func<ReadOnlyMemory<string>, FilterType> F_DeepAny(Func<ReadOnlyMemory<string>, FilterType> after) => path =>
         {
             for (int i = path.Length - 1; i >= 0; i--)
                 if (after.Invoke(path.Slice(i)) == FilterType.Affirm)
@@ -151,7 +151,7 @@ namespace Esper
             return FilterType.NoMatch;
         };
 
-        private static Func<Memory<string>, FilterType> F_Invert(Func<Memory<string>, FilterType> filter) => path =>
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Invert(Func<ReadOnlyMemory<string>, FilterType> filter) => path =>
             filter.Invoke(path) switch
             {
                 FilterType.Affirm => FilterType.Deny,
@@ -188,7 +188,7 @@ namespace Esper
             /// <summary>
             /// Path filters
             /// </summary>
-            internal List<Func<Memory<string>, FilterType>> Filters;
+            internal List<Func<ReadOnlyMemory<string>, FilterType>> Filters;
 
             /// <summary>
             /// Test relative path for inclusion
