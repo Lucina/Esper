@@ -32,8 +32,10 @@ namespace Esper
                 Func<ReadOnlyMemory<string>, FilterType> func = F_None; // Default deny
                 for (int i = xAddSplit.Length - 1; i >= 0; i--)
                 {
-                    switch (xAddSplit[i]) {
-                        case "**": {
+                    switch (xAddSplit[i])
+                    {
+                        case "**":
+                        {
                             // Make sure any sequential * / ** are handled together
                             int j = i - 1;
                             while (j >= 0 && (xAddSplit[j] == "**" || xAddSplit[j] == "*"))
@@ -43,7 +45,8 @@ namespace Esper
                             i = j + 1;
                             break;
                         }
-                        case "*": {
+                        case "*":
+                        {
                             // Make sure any sequential * / ** are handled together
                             int j = i - 1;
                             while (j >= 0 && (xAddSplit[j] == "**" || xAddSplit[j] == "*"))
@@ -124,7 +127,7 @@ namespace Esper
                 int sCount = info.Length / 2;
                 while (true)
                 {
-                    int pos = strSpan.Slice(sLoc).IndexOf(patternSpan.Slice(info[idx * 2], info[idx * 2 + 1]));
+                    int pos = FixedIndexOf(strSpan.Slice(sLoc), patternSpan.Slice(info[idx * 2], info[idx * 2 + 1]));
                     if (pos == -1) return FilterType.NoMatch;
                     if (idx == sCount - 1)
                         return info[idx * 2] + info[idx * 2 + 1] != patternSpan.Length ||
@@ -137,13 +140,70 @@ namespace Esper
             };
         }
 
-        private static Func<ReadOnlyMemory<string>, FilterType> F_Any(Func<ReadOnlyMemory<string>, FilterType> after) => path =>
+        private static int FixedIndexOf(ReadOnlySpan<char> text, ReadOnlySpan<char> pattern)
         {
-            if (path.Length == 1) return FilterType.Affirm;
-            return after.Invoke(path.Slice(1)) == FilterType.Affirm ? FilterType.Affirm : FilterType.NoMatch;
-        };
+            if (pattern.Length == 0) return 0;
+            if (text.Length == 0) return -1;
+            int baseIdx = 0;
+            int curTextIdx = 0;
+            int curPatternIdx = 0;
+            Span<char> rGroup = stackalloc char[256];
+            while (true)
+            {
+                bool keep = true;
+                char c = pattern[curPatternIdx];
+                switch (c)
+                {
+                    case '?':
+                        curTextIdx++;
+                        curPatternIdx++;
+                        break;
+                    case '[':
+                        int eLoc = pattern.Slice(curPatternIdx).IndexOf(']'); // No escaping concept
+                        if (eLoc == -1) throw new ApplicationException("Missing end sqbracket");
+                        eLoc--; // Now count of elements
+                        if (eLoc > rGroup.Length) throw new ApplicationException("Group too long");
+                        if (pattern.Slice(curPatternIdx + 1, eLoc).IndexOf(text[curPatternIdx]) != -1)
+                        {
+                            curTextIdx++;
+                            curPatternIdx += eLoc + 2;
+                        }
+                        else
+                            keep = false;
 
-        private static Func<ReadOnlyMemory<string>, FilterType> F_DeepAny(Func<ReadOnlyMemory<string>, FilterType> after) => path =>
+                        break;
+                    default:
+                        if (c == text[curTextIdx])
+                        {
+                            curTextIdx++;
+                            curPatternIdx++;
+                        }
+                        else
+                            keep = false;
+
+                        break;
+                }
+
+                if (curPatternIdx == pattern.Length) return baseIdx;
+
+                if (keep) continue;
+
+                baseIdx++;
+                if (baseIdx >= text.Length) return -1;
+                curTextIdx = 0;
+                curPatternIdx = 0;
+            }
+        }
+
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Any(Func<ReadOnlyMemory<string>, FilterType> after) =>
+            path =>
+            {
+                if (path.Length == 1) return FilterType.Affirm;
+                return after.Invoke(path.Slice(1)) == FilterType.Affirm ? FilterType.Affirm : FilterType.NoMatch;
+            };
+
+        private static Func<ReadOnlyMemory<string>, FilterType> F_DeepAny(
+            Func<ReadOnlyMemory<string>, FilterType> after) => path =>
         {
             for (int i = path.Length - 1; i >= 0; i--)
                 if (after.Invoke(path.Slice(i)) == FilterType.Affirm)
@@ -151,7 +211,8 @@ namespace Esper
             return FilterType.NoMatch;
         };
 
-        private static Func<ReadOnlyMemory<string>, FilterType> F_Invert(Func<ReadOnlyMemory<string>, FilterType> filter) => path =>
+        private static Func<ReadOnlyMemory<string>, FilterType> F_Invert(
+            Func<ReadOnlyMemory<string>, FilterType> filter) => path =>
             filter.Invoke(path) switch
             {
                 FilterType.Affirm => FilterType.Deny,
