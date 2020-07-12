@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Authors>Lucina</Authors>
+    <Description>Zstd wrapper library</Description>
+    <Copyright>Copyright ©2020 Lucina</Copyright>
+    <PackageProjectUrl>https://github.com/Lucina/Esper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
+    <Company>Lucina</Company>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackOnBuild>true</PackOnBuild>
+    <Owners>Lucina</Owners>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageVersion>0.3.0</PackageVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="lib\win_x64\zstd.dll">
+      <Link>win_x64\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="lib\win_x86\zstd.dll">
+      <Link>win_x86\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="lib\linux_x64\libzstd.so.1.4.4">
+      <Link>linux_x64\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="lib\osx_x64\libzstd.1.4.4.dylib">
+      <Link>osx_x64\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Buffers" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Esper.Accelerator\Esper.Accelerator.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Lucina</Authors>
+    <Description>Runtime interop utilities</Description>
+    <Copyright>Copyright ©2020 Lucina</Copyright>
+    <PackageProjectUrl>https://github.com/Lucina/Esper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
+    <Company>Lucina</Company>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackOnBuild>true</PackOnBuild>
+    <Owners>Lucina</Owners>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageVersion>0.3.0</PackageVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
