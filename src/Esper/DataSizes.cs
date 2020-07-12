@@ -13,12 +13,12 @@
         /// <summary>
         /// Mebibyte
         /// </summary>
-        public const int MiB = 1024 * 1024;
+        public const int MiB = 1024 * KiB;
 
         /// <summary>
         /// Gibibyte
         /// </summary>
-        public const int GiB = 1024 * 1024 * 1024;
+        public const int GiB = 1024 * MiB;
 
         /// <summary>
         /// Kibibyte
@@ -28,22 +28,22 @@
         /// <summary>
         /// Mebibyte
         /// </summary>
-        public const long MiBl = 1024 * 1024;
+        public const long MiBl = 1024 * KiBl;
 
         /// <summary>
         /// Gibibyte
         /// </summary>
-        public const long GiBl = 1024 * 1024 * 1024;
+        public const long GiBl = 1024 * MiBl;
 
         /// <summary>
         /// Tebibyte
         /// </summary>
-        public const long TiBl = 1024L * 1024 * 1024 * 1024;
+        public const long TiBl = 1024L * GiBl;
 
         /// <summary>
         /// Pebibyte
         /// </summary>
-        public const long PiBl = 1024L * 1024 * 1024 * 1024 * 1024;
+        public const long PiBl = 1024L * TiBl;
 
         /// <summary>
         /// Exbibyte
