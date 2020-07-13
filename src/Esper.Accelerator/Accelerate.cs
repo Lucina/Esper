@@ -16,6 +16,11 @@ namespace Esper.Accelerator
         public static AcceleratePlatform DefaultPlatform { get; set; }
 
         /// <summary>
+        /// Global loader for <see cref="AcceleratePlatform.UnknownPlatform"/>
+        /// </summary>
+        public static IAccelerateLoader? GlobalUnknownPlatformLoader { get; set; }
+
+        /// <summary>
         /// Default library path
         /// </summary>
         public static string DefaultPath { get; set; }
@@ -34,17 +39,19 @@ namespace Esper.Accelerator
                     : AcceleratePlatform.WindowsX86;
                 DefaultPath = Path.Combine(DefaultPath, Environment.Is64BitProcess ? "win_x64" : "win_x86");
             }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 DefaultPlatform = AcceleratePlatform.MacosX64;
                 DefaultPath = Path.Combine(DefaultPath, "osx_x64");
             }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 DefaultPlatform = AcceleratePlatform.LinuxX64;
                 DefaultPath = Path.Combine(DefaultPath, "linux_x64");
+            }
+            else
+            {
+                DefaultPlatform = AcceleratePlatform.UnknownPlatform;
             }
         }
 
@@ -58,25 +65,22 @@ namespace Esper.Accelerator
         {
             if (platform == AcceleratePlatform.Default)
                 platform = DefaultPlatform;
-            if (!Loaders.TryGetValue(platform, out var value))
-            {
-                switch (platform)
-                {
-                    case AcceleratePlatform.MacosX64:
-                        value = new MacosLoader();
-                        break;
-                    case AcceleratePlatform.WindowsX64:
-                        value = new Win32Loader();
-                        break;
-                    case AcceleratePlatform.LinuxX64:
-                        value = new LinuxLoader();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(platform), platform, null);
-                }
+            // Always retrieve currently set loader at call time
+            if (platform == AcceleratePlatform.UnknownPlatform)
+                return GlobalUnknownPlatformLoader ?? throw new Exception(
+                    $"{nameof(GlobalUnknownPlatformLoader)} not defined, cannot provide default loader for {nameof(AcceleratePlatform.UnknownPlatform)}");
+            if (Loaders.TryGetValue(platform, out var value)) return value;
 
-                Loaders[platform] = value;
-            }
+            Loaders[platform] = value = platform switch
+            {
+                AcceleratePlatform.MacosX64 => new MacosLoader(),
+                AcceleratePlatform.WindowsX64 => new Win32Loader(),
+                AcceleratePlatform.WindowsX86 => new Win32Loader(),
+                AcceleratePlatform.LinuxX64 => new LinuxLoader(),
+                var x when x == AcceleratePlatform.Default || x == AcceleratePlatform.UnknownPlatform =>
+                throw new Exception(),
+                _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
+            };
 
             return value;
         }
