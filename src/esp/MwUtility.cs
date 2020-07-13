@@ -135,7 +135,7 @@ namespace esp
 
                 using var outputFs2 =
                     new FileStream(Path.Combine(args[2], $"{id}{LoExtension}"), FileMode.CreateNew, FileAccess.Write);
-                LastOrder.WriteLastOrder(outputFs2, blockHashList.ToArray(), fileHashes,
+                LastOrder.WriteLastOrder(outputFs2, blockHashList!.ToArray(), fileHashes,
                     locations.ToArray());
             }
 
@@ -187,7 +187,8 @@ namespace esp
                 if (!(idNode is YamlScalarNode idScalarNode)) continue;
                 if (!eNode.Children.TryGetValue(new YamlScalarNode("filters"), out var filterNode)) continue;
                 if (!(filterNode is YamlSequenceNode filterSequenceNode)) continue;
-                yield return (idScalarNode.Value, LoadFilterListYaml(filterSequenceNode));
+                yield return (idScalarNode.Value ?? throw new ApplicationException("Empty scalar node???"),
+                    LoadFilterListYaml(filterSequenceNode));
             }
         }
 
@@ -195,7 +196,7 @@ namespace esp
         {
             foreach (var node in sequence.Children)
                 if (node is YamlScalarNode scalarNode)
-                    yield return scalarNode.Value;
+                    yield return scalarNode.Value ?? throw new ApplicationException("Empty scalar node???");
         }
 
         private const string NameVerbUnpack = "unpack";
@@ -217,8 +218,9 @@ namespace esp
 
             foreach (string name in mw.GetEntries())
             {
-                mw.TryGetStream(name, out var stream);
-                DataSizes.GetSize(stream.Length, out double value, out string unit);
+                if (!mw.TryGetStream(name, out var stream))
+                    throw new ApplicationException($"Failed to obtain stream for entry {name}");
+                DataSizes.GetSize(stream!.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
                 string path = Path.Combine(args[1], name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -249,8 +251,9 @@ namespace esp
             var ms = new MemoryStream();
             foreach (string name in mw.GetEntries())
             {
-                mw.TryGetStream(name, out var stream);
-                DataSizes.GetSize(stream.Length, out double value, out string unit);
+                if (!mw.TryGetStream(name, out var stream))
+                    throw new ApplicationException($"Failed to obtain stream for entry {name}");
+                DataSizes.GetSize(stream!.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
                 ms.SetLength(0);
                 stream.CopyTo(ms);

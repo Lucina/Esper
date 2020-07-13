@@ -7,13 +7,13 @@ namespace Esper.Misaka
     public sealed class Blake2BHashAlgorithm : HashAlgorithm
     {
         private readonly Blake2BCore _core;
-        private ulong[] _rawConfig;
+        private ulong[]? _rawConfig;
         private readonly byte[] _key = new byte[128];
         private int _outputSizeInBytes;
-        private static readonly Blake2BConfig DefaultConfig = new Blake2BConfig();
+        private static readonly Blake2BConfig _defaultConfig = new Blake2BConfig();
 
         /// <inheritdoc />
-        public Blake2BHashAlgorithm(Blake2BConfig config = null)
+        public Blake2BHashAlgorithm(Blake2BConfig? config = null)
         {
             _core = new Blake2BCore();
             SetConfig(config);
@@ -23,10 +23,9 @@ namespace Esper.Misaka
         /// Set config
         /// </summary>
         /// <param name="config">Config</param>
-        public void SetConfig(Blake2BConfig config = null)
+        public void SetConfig(Blake2BConfig? config = null)
         {
-            if (config == null)
-                config = DefaultConfig;
+            config ??= _defaultConfig;
             _rawConfig = Blake2IvBuilder.ConfigB(config, null);
             if (config.Key != null && config.Key.Length != 0) Array.Copy(config.Key, _key, config.Key.Length);
             _outputSizeInBytes = config.OutputSizeInBytes;
@@ -50,6 +49,9 @@ namespace Esper.Misaka
         /// <inheritdoc />
         public override void Initialize()
         {
+            if (_rawConfig == null)
+                throw new InvalidOperationException(
+                    $"Cannot initialize without config, need to call {nameof(SetConfig)}");
             _core.Initialize(_rawConfig);
             if (_key != null) _core.HashCore(_key, 0, _key.Length);
         }

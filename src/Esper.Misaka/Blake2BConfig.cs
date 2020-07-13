@@ -10,17 +10,17 @@ namespace Esper.Misaka
         /// <summary>
         /// Personalization
         /// </summary>
-        public byte[] Personalization { get; set; }
+        public byte[]? Personalization { get; set; }
 
         /// <summary>
         /// Salt
         /// </summary>
-        public byte[] Salt { get; set; }
+        public byte[]? Salt { get; set; }
 
         /// <summary>
         /// Key
         /// </summary>
-        public byte[] Key { get; set; }
+        public byte[]? Key { get; set; }
 
         /// <summary>
         /// Output size

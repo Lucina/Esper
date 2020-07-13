@@ -16,18 +16,18 @@ namespace Esper.Misaka
 
         //private const int BufferSize = 4096;
         private const int BufferSize = BlockSize;
-        private static readonly byte[] BlankBuffer = new byte[BufferSize];
+        private static readonly byte[] _blankBuffer = new byte[BufferSize];
 
         internal static List<Location> WriteData(
             IEnumerable<Func<(Stream stream, bool keepOpen, int? enforcedOffset)>> inputs, Stream targetStream,
-            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long> blockHashList)
+            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long>? blockHashList)
         {
             blockList = new List<long>();
             blockHashList = hashBlocks ? new List<long>() : null;
             using var hasher = hashBlocks ? new Blake2BHashAlgorithm() : null;
-            var SStream = hashBlocks ? new SStream() : null;
+            var sStream = hashBlocks ? new SStream() : null;
             using var zsa = hashBlocks
-                ? new ZstandardStream(SStream, CompressionMode.Decompress, true)
+                ? new ZstandardStream(sStream, CompressionMode.Decompress, true)
                 : null;
             long tmpTar;
             var locations = new List<Location>();
@@ -55,7 +55,7 @@ namespace Esper.Misaka
                                 while (left > 0)
                                 {
                                     int read = Math.Min(left, BufferSize);
-                                    zs.Write(BlankBuffer, 0, read);
+                                    zs.Write(_blankBuffer, 0, read);
                                     left -= read;
                                 }
                             }
@@ -63,7 +63,7 @@ namespace Esper.Misaka
                             zs.Flush();
                             zs.Reset();
                             tmpTar = targetStream.Position;
-                            blockHashList?.Add(Hash(hasher, zsa, SStream, targetStream, currentBlockPosition,
+                            blockHashList?.Add(Hash(hasher!, zsa!, sStream!, targetStream, currentBlockPosition,
                                 tmpTar - currentBlockPosition));
                             currentBlockPosition = tmpTar;
                             currentBlockOffset = 0;
@@ -87,7 +87,7 @@ namespace Esper.Misaka
                             zs.Flush();
                             zs.Reset();
                             tmpTar = targetStream.Position;
-                            blockHashList?.Add(Hash(hasher, zsa, SStream, targetStream, currentBlockPosition,
+                            blockHashList?.Add(Hash(hasher!, zsa!, sStream!, targetStream, currentBlockPosition,
                                 tmpTar - currentBlockPosition));
                             currentBlockPosition = tmpTar;
                             currentBlockOffset = 0;
@@ -114,14 +114,14 @@ namespace Esper.Misaka
             while (endLeft > 0)
             {
                 int read = Math.Min(endLeft, BufferSize);
-                zs.Write(BlankBuffer, 0, read);
+                zs.Write(_blankBuffer, 0, read);
                 endLeft -= read;
             }
 
             zs.Flush();
 
             tmpTar = targetStream.Position;
-            blockHashList?.Add(Hash(hasher, zsa, SStream, targetStream, currentBlockPosition,
+            blockHashList?.Add(Hash(hasher!, zsa!, sStream!, targetStream, currentBlockPosition,
                 tmpTar - currentBlockPosition));
             currentBlockPosition = tmpTar;
             blockList.Add(currentBlockPosition);
@@ -129,11 +129,11 @@ namespace Esper.Misaka
             return locations;
         }
 
-        private static long Hash(Blake2BHashAlgorithm hasher, ZstandardStream zstandardStream, SStream SStream,
+        private static long Hash(Blake2BHashAlgorithm hasher, ZstandardStream zstandardStream, SStream sStream,
             Stream stream, long offset, long length)
         {
             zstandardStream.Reset();
-            SStream.Set(stream, offset, length);
+            sStream.Set(stream, offset, length);
             long hash = MemoryMarshal.Read<long>(hasher.ComputeHash(zstandardStream));
             return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(hash) : hash;
         }
@@ -152,7 +152,7 @@ namespace Esper.Misaka
                     while (left > 0)
                     {
                         int read = Math.Min(left, BufferSize);
-                        zstd.Write(BlankBuffer, 0, read);
+                        zstd.Write(_blankBuffer, 0, read);
                         left -= read;
                     }
 
@@ -166,7 +166,7 @@ namespace Esper.Misaka
                     while (left > 0)
                     {
                         int read = Math.Min(left, BufferSize);
-                        zstd.Write(BlankBuffer, 0, read);
+                        zstd.Write(_blankBuffer, 0, read);
                         left -= read;
                     }
                 }
@@ -195,15 +195,15 @@ namespace Esper.Misaka
         {
             private readonly ZstandardStream _decompressor;
             private readonly Stream _baseStream;
-            private readonly SStream _SStream;
+            private readonly SStream _sStream;
             private readonly IReadOnlyList<long> _blockList;
 
             public Reader(Stream baseStream, IReadOnlyList<long> blockList)
             {
                 _baseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
                 _blockList = blockList ?? throw new ArgumentNullException(nameof(blockList));
-                _SStream = new SStream();
-                _decompressor = new ZstandardStream(_SStream, CompressionMode.Decompress, true);
+                _sStream = new SStream();
+                _decompressor = new ZstandardStream(_sStream, CompressionMode.Decompress, true);
             }
 
             public void FillStream(Location location, Stream targetStream)
@@ -214,7 +214,7 @@ namespace Esper.Misaka
                 //_decompressor.Reset();
                 while (left > 0)
                 {
-                    _SStream.Set(_baseStream, _blockList[block], _blockList[block + 1] - _blockList[block]);
+                    _sStream.Set(_baseStream, _blockList[block], _blockList[block + 1] - _blockList[block]);
                     _decompressor.Reset();
                     left -= ReadBlock(_decompressor, blockOffset, targetStream, left);
                     blockOffset = 0;
@@ -232,7 +232,7 @@ namespace Esper.Misaka
                 //_decompressor.Reset();
                 while (left > 0)
                 {
-                    _SStream.Set(_baseStream, _blockList[block], _blockList[block + 1] - _blockList[block]);
+                    _sStream.Set(_baseStream, _blockList[block], _blockList[block + 1] - _blockList[block]);
                     _decompressor.Reset();
                     int read = ReadBlock(_decompressor, true, blockOffset, res, ofs, left);
                     left -= read;
@@ -326,7 +326,7 @@ namespace Esper.Misaka
             {
                 _decompressor.Dispose();
                 _baseStream.Dispose();
-                _SStream.Dispose();
+                _sStream.Dispose();
             }
 
             private class AutoStream : Stream
@@ -336,7 +336,7 @@ namespace Esper.Misaka
                 private long _left;
                 private bool _first;
                 private readonly Stream _stream;
-                private readonly SStream _SStream;
+                private readonly SStream _sStream;
                 private readonly ZstandardStream _decompressor;
                 private readonly IReadOnlyList<long> _blockList;
 
@@ -348,10 +348,10 @@ namespace Esper.Misaka
                     _first = true;
                     Length = location.Length;
                     _stream = stream;
-                    _SStream = new SStream(isolate: true);
+                    _sStream = new SStream(isolate: true);
                     _blockList = blockList;
-                    _SStream.Set(_stream, _blockList[_block], _blockList[_block + 1] - _blockList[_block]);
-                    _decompressor = new ZstandardStream(_SStream, CompressionMode.Decompress, true);
+                    _sStream.Set(_stream, _blockList[_block], _blockList[_block + 1] - _blockList[_block]);
+                    _decompressor = new ZstandardStream(_sStream, CompressionMode.Decompress, true);
                 }
 
                 public override void Flush()
@@ -370,7 +370,7 @@ namespace Esper.Misaka
                         _decompressor.Reset();
                         _blockOffset = 0;
                         _block++;
-                        _SStream.Set(_stream, _blockList[_block], _blockList[_block + 1] - _blockList[_block]);
+                        _sStream.Set(_stream, _blockList[_block], _blockList[_block + 1] - _blockList[_block]);
                     }
 
                     return read;

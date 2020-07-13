@@ -5,17 +5,17 @@ namespace Esper.Misaka
 {
     internal static class Blake2IvBuilder
     {
-        private static readonly Blake2BTreeConfig SequentialTreeConfig = new Blake2BTreeConfig()
+        private static readonly Blake2BTreeConfig _sequentialTreeConfig = new Blake2BTreeConfig()
         {
             IntermediateHashSize = 0, LeafSize = 0, FanOut = 1, MaxHeight = 1
         };
 
         [SuppressMessage("ReSharper", "NotResolvedInText")]
-        public static ulong[] ConfigB(Blake2BConfig config, Blake2BTreeConfig treeConfig)
+        public static ulong[] ConfigB(Blake2BConfig config, Blake2BTreeConfig? treeConfig)
         {
             bool isSequential = treeConfig == null;
-            if (isSequential)
-                treeConfig = SequentialTreeConfig;
+            treeConfig ??= _sequentialTreeConfig;
+
             var rawConfig = new ulong[8];
 
             //digest length

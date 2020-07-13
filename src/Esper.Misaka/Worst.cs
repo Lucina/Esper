@@ -48,7 +48,7 @@ namespace Esper.Misaka
         /// <param name="value">Path</param>
         /// <param name="stream">Target</param>
         /// <returns>True if path found</returns>
-        public bool TryGetStream(string value, out Stream stream)
+        public bool TryGetStream(string value, out Stream? stream)
         {
             if (!_index.TryGetValue(value, out var res))
             {
@@ -66,7 +66,7 @@ namespace Esper.Misaka
         /// <param name="value">Path</param>
         /// <param name="array">Result</param>
         /// <returns>True if path found</returns>
-        public bool TryGetArray(string value, out byte[] array)
+        public bool TryGetArray(string value, out byte[]? array)
         {
             if (!_index.TryGetValue(value, out var res))
             {
@@ -164,7 +164,7 @@ namespace Esper.Misaka
         /// <exception cref="ArgumentException">If <paramref name="targetStream"/> is not seekable or writable</exception>
         public static List<Location> WriteData(
             IEnumerable<Func<(Stream stream, bool keepOpen, int? enforcedOffset)>> inputs, Stream targetStream,
-            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long> blockHashList)
+            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long>? blockHashList)
         {
             if (inputs == null)
                 throw new ArgumentNullException(nameof(inputs));

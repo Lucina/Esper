@@ -34,7 +34,7 @@ namespace Esper.Misaka
                 return new MisakaEntryIndex(c, bufData, bufLoc, bufChar);
             });
 
-        private static readonly MisakaEntryIndex Empty =
+        private static readonly MisakaEntryIndex _empty =
             new MisakaEntryIndex(0, new byte[0], new int[1], new char[0]);
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Esper.Misaka
         internal static MisakaEntryIndex Create(IDictionary<string, Location> collection)
         {
             if (collection.Count == 0)
-                return Empty;
+                return _empty;
 
             int c = collection.Count;
             var bufLoc = new int[c + 1];
