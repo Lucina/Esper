@@ -86,7 +86,7 @@ namespace Esper.Misaka {
                 throw new ArgumentException("Stream must be readable");
             var ns = new NetSerializer(baseStream, NsMisaka.Converters);
             baseStream.Position = 0;
-            var pos = ns.ReadS64();
+            long pos = ns.ReadS64();
             baseStream.Position = pos;
             MisakaEntryIndex index;
             long[] blocks;

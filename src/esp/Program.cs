@@ -19,7 +19,7 @@ namespace esp {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageMain);
                 Console.WriteLine("Available utilities:");
-                foreach (var utility in Utilities.Keys)
+                foreach (string utility in Utilities.Keys)
                     Console.WriteLine(utility);
                 return 1;
             }
@@ -35,7 +35,7 @@ namespace esp {
             Console.WriteLine(UsageBase);
             Console.WriteLine(UsageMain);
             Console.WriteLine("Available utilities:");
-            foreach (var utility in Utilities.Keys)
+            foreach (string utility in Utilities.Keys)
                 Console.WriteLine(utility);
             return 2;
         }

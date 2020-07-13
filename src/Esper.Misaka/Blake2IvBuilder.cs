@@ -8,7 +8,7 @@ namespace Esper.Misaka {
 
         [SuppressMessage("ReSharper", "NotResolvedInText")]
         public static ulong[] ConfigB(Blake2BConfig config, Blake2BTreeConfig treeConfig) {
-            var isSequential = treeConfig == null;
+            bool isSequential = treeConfig == null;
             if (isSequential)
                 treeConfig = SequentialTreeConfig;
             var rawConfig = new ulong[8];

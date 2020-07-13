@@ -8,32 +8,47 @@ namespace Esper
     /// </summary>
     public class SStream : Stream
     {
-        private readonly Stream _sourceStream;
-        private readonly long _offset;
+        private Stream _sourceStream;
+        private long _offset;
         private long _position;
         private long _length;
 
         /// <summary>
-        /// Create a limited-range proxy from the current position with a specified length
+        /// Create a default empty instance of <see cref="SStream"/>
+        /// </summary>
+        /// <param name="isolate">If true, enforces stream position for object before reads</param>
+        public SStream(bool isolate = false)
+        {
+            Set(Null, 0, isolate);
+        }
+
+        /// <summary>
+        /// Create a new instance of <see cref="SStream"/>
         /// </summary>
         /// <param name="sourceStream">Stream to wrap</param>
         /// <param name="length">Length of proxy</param>
         /// <param name="isolate">If true, enforces stream position for object before reads</param>
-        public SStream(Stream sourceStream, long length, bool isolate = true)
+        public SStream(Stream sourceStream, long length, bool isolate = false)
         {
-            if (isolate && !sourceStream.CanSeek)
-                throw new ArgumentException("Cannot set isolate if stream is not seekable");
-            Isolate = isolate;
-            _position = 0;
-            _sourceStream = sourceStream;
-            if (sourceStream.CanSeek) _offset = sourceStream.Position;
-            _length = length;
+            Set(sourceStream, length, isolate);
+        }
+
+        /// <summary>
+        /// Create a new instance of <see cref="SStream"/>
+        /// </summary>
+        /// <param name="sourceStream">Stream to wrap</param>
+        /// <param name="offset">Offset of proxy</param>
+        /// <param name="length">Length of proxy</param>
+        /// <param name="isolate">If true, enforces stream position for object before reads</param>
+        public SStream(Stream sourceStream, long offset, long length, bool isolate = false)
+        {
+            Set(sourceStream, offset, length, isolate);
         }
 
         /// <summary>
         /// If true, enforces stream position for object before reads
         /// </summary>
-        public readonly bool Isolate;
+        public bool Isolate;
 
         /// <inheritdoc />
         public override bool CanRead => _sourceStream.CanRead;
@@ -102,6 +117,51 @@ namespace Esper
             int write = (int)(Math.Min(_length, _position + count) - _position);
             _sourceStream.Write(buffer, offset, write);
             _position += write;
+        }
+
+        /// <summary>
+        /// Set source for this stream
+        /// </summary>
+        /// <param name="stream">Source stream</param>
+        /// <param name="length">Source stream length</param>
+        /// <param name="isolate">If true, enforces stream position for object before reads, no change if null</param>
+        public void Set(Stream stream, long length, bool? isolate = true)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (isolate.HasValue)
+            {
+                if (isolate.Value && !stream.CanSeek)
+                    throw new ArgumentException("Cannot set isolate if stream is not seekable");
+                Isolate = isolate.Value;
+            }
+
+            _sourceStream = stream;
+            _offset = _sourceStream.CanSeek ? _sourceStream.Position : 0;
+            _length = length;
+            _position = 0;
+        }
+
+        /// <summary>
+        /// Set source for this stream
+        /// </summary>
+        /// <param name="stream">Source stream</param>
+        /// <param name="offset">Source stream offset</param>
+        /// <param name="length">Source stream length</param>
+        /// <param name="isolate">If true, enforces stream position for object before reads, no change if null</param>
+        public void Set(Stream stream, long offset, long length, bool? isolate = true)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanSeek)
+                throw new ArgumentException(
+                    $"Cannot set stream with parameter {nameof(offset)} if stream is not seekable");
+            if (isolate.HasValue)
+                Isolate = isolate.Value;
+            _sourceStream = stream;
+            _offset = offset;
+            if (!Isolate && _sourceStream.CanSeek)
+                _sourceStream.Position = _offset;
+            _length = length;
+            _position = 0;
         }
     }
 }

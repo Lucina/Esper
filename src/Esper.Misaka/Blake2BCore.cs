@@ -73,7 +73,7 @@ namespace Esper.Misaka {
 
             Array.Clear(_buf, 0, _buf.Length);
 
-            for (var i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
                 _h[i] ^= config[i];
         }
 
@@ -89,8 +89,8 @@ namespace Esper.Misaka {
             if (start + (long) count > array.Length)
                 // ReSharper disable once NotResolvedInText
                 throw new ArgumentOutOfRangeException("start+count");
-            var offset = start;
-            var bufferRemaining = BlockSizeInBytes - _bufferFilled;
+            int offset = start;
+            int bufferRemaining = BlockSizeInBytes - _bufferFilled;
 
             if (_bufferFilled > 0 && count > bufferRemaining) {
                 Array.Copy(array, offset, _buf, _bufferFilled, bufferRemaining);
@@ -127,13 +127,13 @@ namespace Esper.Misaka {
             _finalizationFlag0 = ulong.MaxValue;
             if (isEndOfLayer)
                 _finalizationFlag1 = ulong.MaxValue;
-            for (var i = _bufferFilled; i < _buf.Length; i++)
+            for (int i = _bufferFilled; i < _buf.Length; i++)
                 _buf[i] = 0;
             Compress(_buf, 0);
 
             //Output
             var hash = new byte[64];
-            for (var i = 0; i < 8; ++i)
+            for (int i = 0; i < 8; ++i)
                 UInt64ToBytes(_h[i], hash, i << 3);
             return hash;
         }
@@ -145,7 +145,7 @@ namespace Esper.Misaka {
             if (BitConverter.IsLittleEndian)
                 Buffer.BlockCopy(block, start, m, 0, BlockSizeInBytes);
             else
-                for (var i = 0; i < 16; ++i)
+                for (int i = 0; i < 16; ++i)
                     m[i] = BytesToUInt64(block, start + (i << 3));
 
             /*var m0 = m[0];
@@ -165,23 +165,23 @@ namespace Esper.Misaka {
             var m14 = m[14];
             var m15 = m[15];*/
 
-            var v0 = h[0];
-            var v1 = h[1];
-            var v2 = h[2];
-            var v3 = h[3];
-            var v4 = h[4];
-            var v5 = h[5];
-            var v6 = h[6];
-            var v7 = h[7];
+            ulong v0 = h[0];
+            ulong v1 = h[1];
+            ulong v2 = h[2];
+            ulong v3 = h[3];
+            ulong v4 = h[4];
+            ulong v5 = h[5];
+            ulong v6 = h[6];
+            ulong v7 = h[7];
 
-            var v8 = Iv0;
-            var v9 = Iv1;
-            var v10 = Iv2;
-            var v11 = Iv3;
-            var v12 = Iv4 ^ _counter0;
-            var v13 = Iv5 ^ _counter1;
-            var v14 = Iv6 ^ _finalizationFlag0;
-            var v15 = Iv7 ^ _finalizationFlag1;
+            ulong v8 = Iv0;
+            ulong v9 = Iv1;
+            ulong v10 = Iv2;
+            ulong v11 = Iv3;
+            ulong v12 = Iv4 ^ _counter0;
+            ulong v13 = Iv5 ^ _counter1;
+            ulong v14 = Iv6 ^ _finalizationFlag0;
+            ulong v15 = Iv7 ^ _finalizationFlag1;
 
             // Rounds
 

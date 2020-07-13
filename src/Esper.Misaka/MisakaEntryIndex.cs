@@ -20,7 +20,7 @@ namespace Esper.Misaka {
                 s.WriteSpan<char>(x._bufChar, x._bufChar.Length, true);
             },
             s => {
-                var c = s.ReadS32();
+                int c = s.ReadS32();
                 var bufData = new byte[c * Location.DataLength];
                 s.ReadSpan<byte>(bufData, bufData.Length, true);
                 var bufLoc = new int[c + 1];
@@ -58,10 +58,10 @@ namespace Esper.Misaka {
             if (collection.Count == 0)
                 return Empty;
 
-            var c = collection.Count;
+            int c = collection.Count;
             var bufLoc = new int[c + 1];
 
-            var len = collection.Sum(kvp => kvp.Key.Length);
+            int len = collection.Sum(kvp => kvp.Key.Length);
 
             var bufChar = new char[len];
             bufLoc[0] = 0;
@@ -71,7 +71,7 @@ namespace Esper.Misaka {
 
             len = 0;
             using var enumerator = collection.GetEnumerator();
-            for (var i = 0; i < c; i++) {
+            for (int i = 0; i < c; i++) {
                 // ReSharper disable PossiblyImpureMethodCallOnReadonlyVariable
                 enumerator.MoveNext();
                 // ReSharper restore PossiblyImpureMethodCallOnReadonlyVariable
@@ -87,15 +87,15 @@ namespace Esper.Misaka {
 
         /// <inheritdoc />
         public bool ContainsKey(string key) {
-            var min = 0;
-            var max = Count - 1;
+            int min = 0;
+            int max = Count - 1;
             var baseSpan = _bufChar.AsSpan();
             var strKey = key.AsSpan();
             while (min <= max) {
-                var mid = (min + max) / 2;
-                var pos = _bufLoc[mid];
-                var len = _bufLoc[mid + 1] - pos;
-                var cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
+                int mid = (min + max) / 2;
+                int pos = _bufLoc[mid];
+                int len = _bufLoc[mid + 1] - pos;
+                int cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
                     StringComparison.InvariantCulture);
                 if (cmp == 0)
                     return true;
@@ -116,15 +116,15 @@ namespace Esper.Misaka {
         /// <param name="item">Retrieved value</param>
         /// <returns>True if found</returns>
         public bool TryGetValue(string str, out Location item) {
-            var min = 0;
-            var max = Count - 1;
+            int min = 0;
+            int max = Count - 1;
             var baseSpan = _bufChar.AsSpan();
             var strKey = str.AsSpan();
             while (min <= max) {
-                var mid = (min + max) / 2;
-                var pos = _bufLoc[mid];
-                var len = _bufLoc[mid + 1] - pos;
-                var cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
+                int mid = (min + max) / 2;
+                int pos = _bufLoc[mid];
+                int len = _bufLoc[mid + 1] - pos;
+                int cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
                     StringComparison.InvariantCulture);
                 if (cmp == 0) {
                     item = Location.Extract(_bufData.AsSpan(mid*Location.DataLength, Location.DataLength));
@@ -148,15 +148,15 @@ namespace Esper.Misaka {
         /// <exception cref="KeyNotFoundException"></exception>
         public Location this[string index] {
             get {
-                var min = 0;
-                var max = Count - 1;
+                int min = 0;
+                int max = Count - 1;
                 var baseSpan = _bufChar.AsSpan();
                 var strKey = index.AsSpan();
                 while (min <= max) {
-                    var mid = (min + max) / 2;
-                    var pos = _bufLoc[mid];
-                    var len = _bufLoc[mid + 1] - pos;
-                    var cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
+                    int mid = (min + max) / 2;
+                    int pos = _bufLoc[mid];
+                    int len = _bufLoc[mid + 1] - pos;
+                    int cmp = MemoryExtensions.CompareTo(baseSpan.Slice(pos, len), strKey,
                         StringComparison.InvariantCulture);
                     if (cmp == 0) {
                         return Location.Extract(_bufData.AsSpan(mid*Location.DataLength, Location.DataLength));
@@ -175,9 +175,9 @@ namespace Esper.Misaka {
         /// <inheritdoc />
         public IEnumerable<string> Keys {
             get {
-                for (var i = 0; i < Count; i++) {
-                    var pos = _bufLoc[i];
-                    var len = _bufLoc[i + 1] - pos;
+                for (int i = 0; i < Count; i++) {
+                    int pos = _bufLoc[i];
+                    int len = _bufLoc[i + 1] - pos;
                     yield return new string(_bufChar, pos, len);
                 }
             }
@@ -186,7 +186,7 @@ namespace Esper.Misaka {
         /// <inheritdoc />
         public IEnumerable<Location> Values {
             get {
-                for(var i = 0; i < Count; i++)
+                for(int i = 0; i < Count; i++)
                     yield return Location.Extract(_bufData.AsSpan(i*Location.DataLength, Location.DataLength));
             }
         }
@@ -206,9 +206,9 @@ namespace Esper.Misaka {
 
         /// <inheritdoc />
         public IEnumerator<KeyValuePair<string, Location>> GetEnumerator() {
-            for (var i = 0; i < Count; i++) {
-                var pos = _bufLoc[i];
-                var len = _bufLoc[i + 1] - pos;
+            for (int i = 0; i < Count; i++) {
+                int pos = _bufLoc[i];
+                int len = _bufLoc[i + 1] - pos;
                 yield return new KeyValuePair<string, Location>(new string(_bufChar, pos, len),
                     Location.Extract(_bufData.AsSpan(i*Location.DataLength, Location.DataLength)));
             }

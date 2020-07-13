@@ -31,7 +31,7 @@ namespace esp {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageVerb);
                 Console.WriteLine("Available verbs:");
-                foreach (var verb in Verbs.Keys)
+                foreach (string verb in Verbs.Keys)
                     Console.WriteLine(verb);
                 return 1;
             }
@@ -46,7 +46,7 @@ namespace esp {
             Console.WriteLine(UsageBase);
             Console.WriteLine(UsageVerb);
             Console.WriteLine("Available verbs:");
-            foreach (var verb in Verbs.Keys)
+            foreach (string verb in Verbs.Keys)
                 Console.WriteLine(verb);
             return 2;
         }
@@ -71,7 +71,7 @@ namespace esp {
 
             var baseFiles = new List<(string path, string fullPath, long length)>(FlatFilesystemReader(args[1]));
 
-            foreach (var (id, filterSrc) in LoadFilterStreamYaml(filterFs)) {
+            foreach ((string id, IEnumerable<string> filterSrc) in LoadFilterStreamYaml(filterFs)) {
                 using var outputFs = new FileStream(Path.Combine(args[2], $"{id}{MwExtension}"), FileMode.CreateNew,
                     FileAccess.ReadWrite);
 
@@ -81,10 +81,10 @@ namespace esp {
                 foreach (var file in baseFiles)
                     if (filter.Test(file.path))
                         files.Add(file);
-                var totalSize = files.Sum(f => f.length);
-                var processedSize = 0L;
-                DataSizes.GetSize(totalSize, out var totalV, out var totalU);
-                var totalSizeStr = $"{totalV:N3}{totalU}";
+                long totalSize = files.Sum(f => f.length);
+                long processedSize = 0L;
+                DataSizes.GetSize(totalSize, out double totalV, out string totalU);
+                string totalSizeStr = $"{totalV:N3}{totalU}";
 
                 var fileHashes = new long[files.Count];
                 var fileHashedSet = new HashSet<string>();
@@ -102,11 +102,11 @@ namespace esp {
                             => () => {
                                 var fs = new FileStream(x.fullPath, FileMode.Open, FileAccess.Read);
                                 if (fileHashedSet.Add(x.path)) {
-                                    DataSizes.GetSize(processedSize += x.length, out var size, out var unit);
-                                    DataSizes.GetSize(x.length, out var size2, out var unit2);
+                                    DataSizes.GetSize(processedSize += x.length, out double size, out string unit);
+                                    DataSizes.GetSize(x.length, out double size2, out string unit2);
                                     Console.WriteLine(
                                         $"[{size2:N3}{unit2} ({size:N3}{unit}) / {totalSizeStr}] {x.path}");
-                                    var hash = MemoryMarshal.Read<long>(hasher.ComputeHash(fs));
+                                    long hash = MemoryMarshal.Read<long>(hasher.ComputeHash(fs));
                                     fileHashes[y] = BitConverter.IsLittleEndian
                                         ? BinaryPrimitives.ReverseEndianness(hash)
                                         : hash;
@@ -119,7 +119,7 @@ namespace esp {
                 );
 
                 var sortedDict = new SortedDictionary<string, Location>(StringComparer.InvariantCultureIgnoreCase);
-                for (var i = 0; i < files.Count; i++)
+                for (int i = 0; i < files.Count; i++)
                     sortedDict.Add(files[i].path, locations[i]);
 
                 Worst.WriteWrapper(outputFs, blockList.ToArray(), sortedDict);
@@ -139,7 +139,7 @@ namespace esp {
             //var fQueue = new Queue<(string, long)>();
             var fInfo = new FileInfo(sourceDir);
             if (fInfo.Exists) {
-                var path = Path.GetFileName(sourceDir);
+                string? path = Path.GetFileName(sourceDir);
                 yield return (path, Path.Combine(sourceDir, path), fInfo.Length);
                 yield break;
             }
@@ -147,16 +147,16 @@ namespace esp {
             dQueue.Enqueue(string.Empty);
 
             while (dQueue.Count != 0) {
-                var src = dQueue.Dequeue();
-                var curDir = Path.Combine(sourceDir, src);
+                string src = dQueue.Dequeue();
+                string curDir = Path.Combine(sourceDir, src);
                 if (!Directory.Exists(curDir)) continue;
-                foreach (var file in Directory.EnumerateFiles(curDir)) {
-                    var path = Path.Combine(src, Path.GetFileName(file));
-                    var fullPath = Path.Combine(sourceDir, path);
+                foreach (string file in Directory.EnumerateFiles(curDir)) {
+                    string path = Path.Combine(src, Path.GetFileName(file));
+                    string fullPath = Path.Combine(sourceDir, path);
                     yield return (path, fullPath, new FileInfo(fullPath).Length);
                 }
 
-                foreach (var folder in Directory.EnumerateDirectories(curDir))
+                foreach (string folder in Directory.EnumerateDirectories(curDir))
                     dQueue.Enqueue(Path.Combine(src, Path.GetFileName(folder)));
             }
         }
@@ -197,11 +197,11 @@ namespace esp {
             using var fs = new FileStream(args[0], FileMode.Open, FileAccess.Read);
             var mw = Worst.Read(fs);
 
-            foreach (var name in mw.GetEntries()) {
+            foreach (string name in mw.GetEntries()) {
                 mw.TryGetStream(name, out var stream);
-                DataSizes.GetSize(stream.Length, out var value, out var unit);
+                DataSizes.GetSize(stream.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
-                var path = Path.Combine(args[1], name);
+                string path = Path.Combine(args[1], name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 using var fso = new FileStream(path, FileMode.Create, FileAccess.Write);
                 stream.CopyTo(fso);
@@ -226,9 +226,9 @@ namespace esp {
             var mw = Worst.Read(fs);
 
             var ms = new MemoryStream();
-            foreach (var name in mw.GetEntries()) {
+            foreach (string name in mw.GetEntries()) {
                 mw.TryGetStream(name, out var stream);
-                DataSizes.GetSize(stream.Length, out var value, out var unit);
+                DataSizes.GetSize(stream.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
                 ms.SetLength(0);
                 stream.CopyTo(ms);
