@@ -19,7 +19,7 @@ namespace Esper.Accelerator
         {
             dll = $"{dll}.dll";
             if (basePath != null)
-                dll = System.IO.Path.GetFullPath(System.IO.Path.Combine(basePath, dll));
+                dll = System.IO.Path.Combine(basePath, dll);
             var handle = LoadLibrary(dll);
             if (handle == IntPtr.Zero)
                 throw new Win32Exception(Marshal.GetLastWin32Error());
