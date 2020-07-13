@@ -28,7 +28,7 @@ namespace Esper
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
             try
             {
-                IntPtr lib = Accelerate.This("kernel32", null, AcceleratePlatform.Default, "C:\\Windows\\System32");
+                IntPtr lib = Accelerate.This("kernel32", null, AcceleratePlatform.Default, "");
                 // https://gist.github.com/tomzorz/6142d69852f831fb5393654c90a1f22e
                 GetStdHandle GetStdHandle = Accelerate.This<GetStdHandle>(lib, "GetStdHandle");
                 GetConsoleMode GetConsoleMode = Accelerate.This<GetConsoleMode>(lib, "GetConsoleMode");
