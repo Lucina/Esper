@@ -6,4 +6,5 @@
 |------------------------|---------|
 | `Esper`           | [![NuGet](https://img.shields.io/nuget/v/Esper.svg)](https://www.nuget.org/packages/Esper/)|
 | `Esper.Accelerator`           | [![NuGet](https://img.shields.io/nuget/v/Esper.Accelerator.svg)](https://www.nuget.org/packages/Esper.Accelerator/)|
+| `Esper.Misaka`           | [![NuGet](https://img.shields.io/nuget/v/Esper.Misaka.svg)](https://www.nuget.org/packages/Esper.Misaka/)|
 | `Esper.Zstandard`           | [![NuGet](https://img.shields.io/nuget/v/Esper.Zstandard.svg)](https://www.nuget.org/packages/Esper.Zstandard/)|
