@@ -1,7 +1,9 @@
 ﻿using System;
 
-namespace Esper.Misaka {
-    internal sealed class Blake2BCore {
+namespace Esper.Misaka
+{
+    internal sealed class Blake2BCore
+    {
         private bool _isInitialized;
 
         private int _bufferFilled;
@@ -25,30 +27,33 @@ namespace Esper.Misaka {
         private const ulong Iv6 = 0x1F83D9ABFB41BD6BUL;
         private const ulong Iv7 = 0x5BE0CD19137E2179UL;
 
-        internal static ulong BytesToUInt64(byte[] buf, int offset) {
+        internal static ulong BytesToUInt64(byte[] buf, int offset)
+        {
             return
-                (ulong) buf[offset + 7] << 7 * 8 |
-                ((ulong) buf[offset + 6] << 6 * 8) |
-                ((ulong) buf[offset + 5] << 5 * 8) |
-                ((ulong) buf[offset + 4] << 4 * 8) |
-                ((ulong) buf[offset + 3] << 3 * 8) |
-                ((ulong) buf[offset + 2] << 2 * 8) |
-                ((ulong) buf[offset + 1] << 1 * 8) |
+                (ulong)buf[offset + 7] << 7 * 8 |
+                ((ulong)buf[offset + 6] << 6 * 8) |
+                ((ulong)buf[offset + 5] << 5 * 8) |
+                ((ulong)buf[offset + 4] << 4 * 8) |
+                ((ulong)buf[offset + 3] << 3 * 8) |
+                ((ulong)buf[offset + 2] << 2 * 8) |
+                ((ulong)buf[offset + 1] << 1 * 8) |
                 buf[offset];
         }
 
-        private static void UInt64ToBytes(ulong value, byte[] buf, int offset) {
-            buf[offset + 7] = (byte) (value >> 7 * 8);
-            buf[offset + 6] = (byte) (value >> 6 * 8);
-            buf[offset + 5] = (byte) (value >> 5 * 8);
-            buf[offset + 4] = (byte) (value >> 4 * 8);
-            buf[offset + 3] = (byte) (value >> 3 * 8);
-            buf[offset + 2] = (byte) (value >> 2 * 8);
-            buf[offset + 1] = (byte) (value >> 1 * 8);
-            buf[offset] = (byte) value;
+        private static void UInt64ToBytes(ulong value, byte[] buf, int offset)
+        {
+            buf[offset + 7] = (byte)(value >> 7 * 8);
+            buf[offset + 6] = (byte)(value >> 6 * 8);
+            buf[offset + 5] = (byte)(value >> 5 * 8);
+            buf[offset + 4] = (byte)(value >> 4 * 8);
+            buf[offset + 3] = (byte)(value >> 3 * 8);
+            buf[offset + 2] = (byte)(value >> 2 * 8);
+            buf[offset + 1] = (byte)(value >> 1 * 8);
+            buf[offset] = (byte)value;
         }
 
-        public void Initialize(ulong[] config) {
+        public void Initialize(ulong[] config)
+        {
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
             if (config.Length != 8)
@@ -77,7 +82,8 @@ namespace Esper.Misaka {
                 _h[i] ^= config[i];
         }
 
-        public void HashCore(byte[] array, int start, int count) {
+        public void HashCore(byte[] array, int start, int count)
+        {
             if (!_isInitialized)
                 throw new InvalidOperationException("Not initialized");
             if (array == null)
@@ -86,13 +92,14 @@ namespace Esper.Misaka {
                 throw new ArgumentOutOfRangeException(nameof(start));
             if (count < 0)
                 throw new ArgumentOutOfRangeException(nameof(count));
-            if (start + (long) count > array.Length)
+            if (start + (long)count > array.Length)
                 // ReSharper disable once NotResolvedInText
                 throw new ArgumentOutOfRangeException("start+count");
             int offset = start;
             int bufferRemaining = BlockSizeInBytes - _bufferFilled;
 
-            if (_bufferFilled > 0 && count > bufferRemaining) {
+            if (_bufferFilled > 0 && count > bufferRemaining)
+            {
                 Array.Copy(array, offset, _buf, _bufferFilled, bufferRemaining);
                 _counter0 += BlockSizeInBytes;
                 if (_counter0 == 0)
@@ -103,7 +110,8 @@ namespace Esper.Misaka {
                 _bufferFilled = 0;
             }
 
-            while (count > BlockSizeInBytes) {
+            while (count > BlockSizeInBytes)
+            {
                 _counter0 += BlockSizeInBytes;
                 if (_counter0 == 0)
                     _counter1++;
@@ -117,13 +125,14 @@ namespace Esper.Misaka {
             _bufferFilled += count;
         }
 
-        public byte[] HashFinal(bool isEndOfLayer = false) {
+        public byte[] HashFinal(bool isEndOfLayer = false)
+        {
             if (!_isInitialized)
                 throw new InvalidOperationException("Not initialized");
             _isInitialized = false;
 
             //Last compression
-            _counter0 += (uint) _bufferFilled;
+            _counter0 += (uint)_bufferFilled;
             _finalizationFlag0 = ulong.MaxValue;
             if (isEndOfLayer)
                 _finalizationFlag1 = ulong.MaxValue;
@@ -138,7 +147,8 @@ namespace Esper.Misaka {
             return hash;
         }
 
-        private void Compress(byte[] block, int start) {
+        private void Compress(byte[] block, int start)
+        {
             var h = _h;
             var m = _m;
 

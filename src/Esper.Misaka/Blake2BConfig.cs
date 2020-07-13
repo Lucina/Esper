@@ -1,22 +1,27 @@
 using System;
 
-namespace Esper.Misaka {
+namespace Esper.Misaka
+{
     /// <summary>
     /// Blake2b config
     /// </summary>
-    public sealed class Blake2BConfig : ICloneable {
+    public sealed class Blake2BConfig : ICloneable
+    {
         /// <summary>
         /// Personalization
         /// </summary>
         public byte[] Personalization { get; set; }
+
         /// <summary>
         /// Salt
         /// </summary>
         public byte[] Salt { get; set; }
+
         /// <summary>
         /// Key
         /// </summary>
         public byte[] Key { get; set; }
+
         /// <summary>
         /// Output size
         /// </summary>
@@ -25,7 +30,8 @@ namespace Esper.Misaka {
         /// <summary>
         /// Output size
         /// </summary>
-        public int OutputSizeInBits {
+        public int OutputSizeInBits
+        {
             get => OutputSizeInBytes * 8;
             set =>
                 OutputSizeInBytes = value % 8 == 0
@@ -36,7 +42,8 @@ namespace Esper.Misaka {
         /// <summary>
         /// Create new default config
         /// </summary>
-        public Blake2BConfig() {
+        public Blake2BConfig()
+        {
             OutputSizeInBytes = 64;
         }
 
@@ -44,18 +51,20 @@ namespace Esper.Misaka {
         /// Clone instance
         /// </summary>
         /// <returns>Cloned instance</returns>
-        public Blake2BConfig Clone() {
+        public Blake2BConfig Clone()
+        {
             var result = new Blake2BConfig {OutputSizeInBytes = OutputSizeInBytes};
             if (Key != null)
-                result.Key = (byte[]) Key.Clone();
+                result.Key = (byte[])Key.Clone();
             if (Personalization != null)
-                result.Personalization = (byte[]) Personalization.Clone();
+                result.Personalization = (byte[])Personalization.Clone();
             if (Salt != null)
-                result.Salt = (byte[]) Salt.Clone();
+                result.Salt = (byte[])Salt.Clone();
             return result;
         }
 
-        object ICloneable.Clone() {
+        object ICloneable.Clone()
+        {
             return Clone();
         }
     }

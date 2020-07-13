@@ -2,17 +2,20 @@
 using System.Collections.Generic;
 using Ns;
 
-namespace Esper.Misaka {
+namespace Esper.Misaka
+{
     /// <summary>
     /// NetSerializer types
     /// </summary>
-    public static class NsMisaka {
+    public static class NsMisaka
+    {
         /// <summary>
         /// Converters
         /// </summary>
         public static readonly IReadOnlyDictionary<Type, (object encoder, object decoder)> Converters;
 
-        static NsMisaka() {
+        static NsMisaka()
+        {
             var converters = new Dictionary<Type, (object encoder, object decoder)>();
 
             #region BCL types

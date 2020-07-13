@@ -6,14 +6,18 @@ using Esper.Misaka;
 using NUnit.Framework;
 using static Esper.DataSizes;
 
-namespace Esper.Test {
-    public class MisakaTests {
+namespace Esper.Test
+{
+    public class MisakaTests
+    {
         [SetUp]
-        public void Setup() {
+        public void Setup()
+        {
         }
 
         [Test]
-        public void TestMisaka() {
+        public void TestMisaka()
+        {
             // Create buffers
             var buf = new byte[1 * MiB + 3 * KiB];
             //var bufOut = new byte[buf.Length];
@@ -30,10 +34,9 @@ namespace Esper.Test {
             var ms = new MemoryStream();
 
             // Test enforcing offsets
-            var arr = new Func<(Stream,  bool, int?)>[] {
-                () => (msProto, true, null),
-                () => (msProto2, true, 13),
-                () => (msProto3, true, null)
+            var arr = new Func<(Stream, bool, int?)>[]
+            {
+                () => (msProto, true, null), () => (msProto2, true, 13), () => (msProto3, true, null)
             };
 
             var locations = Worst.WriteData(arr, ms, false, out var blockList, true, out _);

@@ -5,15 +5,18 @@ using System.IO.Compression;
 using Esper.Zstandard;
 using Ns;
 
-namespace Esper.Misaka {
+namespace Esper.Misaka
+{
     /// <summary>
     /// Provides r/w access for .mw container
     /// </summary>
-    public class Worst {
+    public class Worst
+    {
         private readonly MisakaEntryIndex _index;
         private readonly BlockUtil.Reader _blockReader;
 
-        private Worst(MisakaEntryIndex index, BlockUtil.Reader blockReader) {
+        private Worst(MisakaEntryIndex index, BlockUtil.Reader blockReader)
+        {
             _index = index;
             _blockReader = blockReader;
         }
@@ -30,7 +33,8 @@ namespace Esper.Misaka {
         /// <param name="value">Path</param>
         /// <param name="stream">Target</param>
         /// <returns>True if path found</returns>
-        public bool TryReadToStream(string value, Stream stream) {
+        public bool TryReadToStream(string value, Stream stream)
+        {
             if (!_index.TryGetValue(value, out var res))
                 return false;
 
@@ -44,8 +48,10 @@ namespace Esper.Misaka {
         /// <param name="value">Path</param>
         /// <param name="stream">Target</param>
         /// <returns>True if path found</returns>
-        public bool TryGetStream(string value, out Stream stream) {
-            if (!_index.TryGetValue(value, out var res)) {
+        public bool TryGetStream(string value, out Stream stream)
+        {
+            if (!_index.TryGetValue(value, out var res))
+            {
                 stream = null;
                 return false;
             }
@@ -60,8 +66,10 @@ namespace Esper.Misaka {
         /// <param name="value">Path</param>
         /// <param name="array">Result</param>
         /// <returns>True if path found</returns>
-        public bool TryGetArray(string value, out byte[] array) {
-            if (!_index.TryGetValue(value, out var res)) {
+        public bool TryGetArray(string value, out byte[] array)
+        {
+            if (!_index.TryGetValue(value, out var res))
+            {
                 array = null;
                 return false;
             }
@@ -77,7 +85,8 @@ namespace Esper.Misaka {
         /// <returns>Container</returns>
         /// <exception cref="ArgumentNullException">If <paramref name="baseStream"/> is null</exception>
         /// <exception cref="ArgumentException">If <paramref name="baseStream"/> is not seekable or readable</exception>
-        public static Worst Read(Stream baseStream) {
+        public static Worst Read(Stream baseStream)
+        {
             if (baseStream == null)
                 throw new ArgumentNullException(nameof(baseStream));
             if (!baseStream.CanSeek)
@@ -90,7 +99,8 @@ namespace Esper.Misaka {
             baseStream.Position = pos;
             MisakaEntryIndex index;
             long[] blocks;
-            using (var zs = new ZstandardStream(baseStream, CompressionMode.Decompress, true)) {
+            using (var zs = new ZstandardStream(baseStream, CompressionMode.Decompress, true))
+            {
                 ns.BaseStream = zs;
                 index = ns.Deserialize<MisakaEntryIndex>();
                 blocks = ns.Deserialize<long[]>();
@@ -112,7 +122,8 @@ namespace Esper.Misaka {
         /// Should be called after calling <see cref="WriteData"/>.
         /// </remarks>
         public static Worst WriteWrapper(Stream targetStream, long[] blocks,
-            IDictionary<string, Location> collection) {
+            IDictionary<string, Location> collection)
+        {
             if (targetStream == null)
                 throw new ArgumentNullException(nameof(targetStream));
             if (blocks == null)
@@ -128,7 +139,8 @@ namespace Esper.Misaka {
             ns.WriteS64(targetStream.Length);
             targetStream.Position = targetStream.Length;
             var index = MisakaEntryIndex.Create(collection);
-            using (var zs = new ZstandardStream(targetStream, ZstandardStream.MaxCompressionLevel, true)) {
+            using (var zs = new ZstandardStream(targetStream, ZstandardStream.MaxCompressionLevel, true))
+            {
                 ns.BaseStream = zs;
                 ns.Serialize(index);
                 ns.Serialize(blocks);
@@ -152,7 +164,8 @@ namespace Esper.Misaka {
         /// <exception cref="ArgumentException">If <paramref name="targetStream"/> is not seekable or writable</exception>
         public static List<Location> WriteData(
             IEnumerable<Func<(Stream stream, bool keepOpen, int? enforcedOffset)>> inputs, Stream targetStream,
-            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long> blockHashList) {
+            bool enforceBlockFill, out List<long> blockList, bool hashBlocks, out List<long> blockHashList)
+        {
             if (inputs == null)
                 throw new ArgumentNullException(nameof(inputs));
             if (targetStream == null)
@@ -163,7 +176,8 @@ namespace Esper.Misaka {
                 throw new ArgumentException("Stream must be writable");
             targetStream.SetLength(0);
             targetStream.Position = sizeof(long);
-            return BlockUtil.WriteData(inputs, targetStream, enforceBlockFill, out blockList, hashBlocks, out blockHashList);
+            return BlockUtil.WriteData(inputs, targetStream, enforceBlockFill, out blockList, hashBlocks,
+                out blockHashList);
         }
     }
 }

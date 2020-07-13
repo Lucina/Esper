@@ -1,31 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>8</LangVersion>
-        <Authors>Lucina</Authors>
-        <Description>Misaka Zstd compressed container library</Description>
-        <Copyright>Copyright ©2020 Lucina</Copyright>
-        <PackageProjectUrl>https://github.com/Lucina/Esper</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
-        <Company>Lucina</Company>
-        <AssemblyVersion>1.0.0</AssemblyVersion>
-        <PackOnBuild>true</PackOnBuild>
-        <Owners>Lucina</Owners>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-        <PackageVersion>0.3.0</PackageVersion>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <Authors>Lucina</Authors>
+    <Description>Misaka Zstd compressed container library</Description>
+    <Copyright>Copyright ©2020 Lucina</Copyright>
+    <PackageProjectUrl>https://github.com/Lucina/Esper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
+    <Company>Lucina</Company>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackOnBuild>true</PackOnBuild>
+    <Owners>Lucina</Owners>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageVersion>0.3.0</PackageVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Ns" Version="2.0.1"/>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Ns" Version="2.0.1" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Esper.Zstandard\Esper.Zstandard.csproj"/>
-        <ProjectReference Include="..\Esper\Esper.csproj"/>
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Esper.Zstandard\Esper.Zstandard.csproj" />
+    <ProjectReference Include="..\Esper\Esper.csproj" />
+  </ItemGroup>
 
 </Project>

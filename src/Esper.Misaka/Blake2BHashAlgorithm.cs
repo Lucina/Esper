@@ -1,9 +1,11 @@
 using System;
 using System.Security.Cryptography;
 
-namespace Esper.Misaka {
+namespace Esper.Misaka
+{
     /// <inheritdoc />
-    public sealed class Blake2BHashAlgorithm : HashAlgorithm {
+    public sealed class Blake2BHashAlgorithm : HashAlgorithm
+    {
         private readonly Blake2BCore _core;
         private ulong[] _rawConfig;
         private readonly byte[] _key = new byte[128];
@@ -11,7 +13,8 @@ namespace Esper.Misaka {
         private static readonly Blake2BConfig DefaultConfig = new Blake2BConfig();
 
         /// <inheritdoc />
-        public Blake2BHashAlgorithm(Blake2BConfig config = null) {
+        public Blake2BHashAlgorithm(Blake2BConfig config = null)
+        {
             _core = new Blake2BCore();
             SetConfig(config);
         }
@@ -20,7 +23,8 @@ namespace Esper.Misaka {
         /// Set config
         /// </summary>
         /// <param name="config">Config</param>
-        public void SetConfig(Blake2BConfig config = null) {
+        public void SetConfig(Blake2BConfig config = null)
+        {
             if (config == null)
                 config = DefaultConfig;
             _rawConfig = Blake2IvBuilder.ConfigB(config, null);
@@ -34,7 +38,8 @@ namespace Esper.Misaka {
             _core.HashCore(array, ibStart, cbSize);
 
         /// <inheritdoc />
-        protected override byte[] HashFinal() {
+        protected override byte[] HashFinal()
+        {
             var fullResult = _core.HashFinal();
             if (_outputSizeInBytes == fullResult.Length) return fullResult;
             var result = new byte[_outputSizeInBytes];
@@ -43,7 +48,8 @@ namespace Esper.Misaka {
         }
 
         /// <inheritdoc />
-        public override void Initialize() {
+        public override void Initialize()
+        {
             _core.Initialize(_rawConfig);
             if (_key != null) _core.HashCore(_key, 0, _key.Length);
         }

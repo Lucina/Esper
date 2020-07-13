@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace esp {
-    internal static class Program {
+namespace esp
+{
+    internal static class Program
+    {
         internal const string ProgramName = "esp";
         private const string UsageBase = "Usage:";
 
@@ -10,12 +12,15 @@ namespace esp {
             ProgramName + " <utility> <verb> [options]";
 
         private static readonly Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>> Utilities =
-            new Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>> {
+            new Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>>
+            {
                 {MwUtility.UtilityName, MwUtility.Operate}
             };
 
-        private static int Main(string[] args) {
-            if (args.Length == 0) {
+        private static int Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageMain);
                 Console.WriteLine("Available utilities:");
@@ -30,7 +35,8 @@ namespace esp {
                 new ArraySegment<string>(args, 1, args.Length - 1));
         }
 
-        private static int UnknownUtilityHandler(ArraySegment<string> processed, ArraySegment<string> args) {
+        private static int UnknownUtilityHandler(ArraySegment<string> processed, ArraySegment<string> args)
+        {
             Console.WriteLine($"Unknown utility {processed[0]}");
             Console.WriteLine(UsageBase);
             Console.WriteLine(UsageMain);

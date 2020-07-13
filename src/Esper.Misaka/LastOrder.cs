@@ -4,11 +4,13 @@ using System.Runtime.InteropServices;
 using Esper.Zstandard;
 using Ns;
 
-namespace Esper.Misaka {
+namespace Esper.Misaka
+{
     /// <summary>
     /// Utility for .mw container support format .lo
     /// </summary>
-    public static class LastOrder {
+    public static class LastOrder
+    {
         /// <summary>
         /// Write last order data to stream
         /// </summary>
@@ -16,7 +18,9 @@ namespace Esper.Misaka {
         /// <param name="blockHashes">Block hashes</param>
         /// <param name="fileHashes">File hashes</param>
         /// <param name="locations">Locations</param>
-        public static void WriteLastOrder(Stream baseStream, long[] blockHashes, long[] fileHashes, Location[] locations) {
+        public static void WriteLastOrder(Stream baseStream, long[] blockHashes, long[] fileHashes,
+            Location[] locations)
+        {
             using var zs = new ZstandardStream(baseStream, ZstandardStream.MaxCompressionLevel, true);
             var ns = new NetSerializer(zs);
             ns.Serialize(blockHashes);
@@ -31,7 +35,8 @@ namespace Esper.Misaka {
         /// </summary>
         /// <param name="baseStream">Stream to read from</param>
         /// <returns>Block hashes</returns>
-        public static (long[] blockHashes, long[] fileHashes,Location[] locations) ReadLastOrder(Stream baseStream) {
+        public static (long[] blockHashes, long[] fileHashes, Location[] locations) ReadLastOrder(Stream baseStream)
+        {
             using var zs = new ZstandardStream(baseStream, CompressionMode.Decompress, true);
             var ns = new NetSerializer(zs);
             var blockHashes = ns.Deserialize<long[]>();

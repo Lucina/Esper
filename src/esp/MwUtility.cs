@@ -8,8 +8,10 @@ using Esper;
 using Esper.Misaka;
 using YamlDotNet.RepresentationModel;
 
-namespace esp {
-    internal static class MwUtility {
+namespace esp
+{
+    internal static class MwUtility
+    {
         internal const string UtilityName = "mw";
         private const string UsageBase = "Usage:";
 
@@ -20,14 +22,15 @@ namespace esp {
         private const string LoExtension = ".lo";
 
         private static readonly Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>> Verbs =
-            new Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>> {
-                {NameVerbPack, VerbPack},
-                {NameVerbUnpack, VerbUnpack},
-                {NameVerbAlloctest, VerbAlloctest}
+            new Dictionary<string, Func<ArraySegment<string>, ArraySegment<string>, int>>
+            {
+                {NameVerbPack, VerbPack}, {NameVerbUnpack, VerbUnpack}, {NameVerbAlloctest, VerbAlloctest}
             };
 
-        internal static int Operate(ArraySegment<string> processed, ArraySegment<string> args) {
-            if (args.Count == 0) {
+        internal static int Operate(ArraySegment<string> processed, ArraySegment<string> args)
+        {
+            if (args.Count == 0)
+            {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageVerb);
                 Console.WriteLine("Available verbs:");
@@ -41,7 +44,8 @@ namespace esp {
             return func.Invoke(args.Slice(0, 1), args.Slice(1, args.Count - 1));
         }
 
-        private static int UnknownVerbHandler(ArraySegment<string> processed, ArraySegment<string> args) {
+        private static int UnknownVerbHandler(ArraySegment<string> processed, ArraySegment<string> args)
+        {
             Console.WriteLine($"Unknown verb {processed[0]}");
             Console.WriteLine(UsageBase);
             Console.WriteLine(UsageVerb);
@@ -56,8 +60,10 @@ namespace esp {
         private const string UsageVerbPack =
             Program.ProgramName + " " + UtilityName + " " + NameVerbPack + " <filterfile> <source> <target>";
 
-        private static int VerbPack(ArraySegment<string> processed, ArraySegment<string> args) {
-            if (args.Count < 3) {
+        private static int VerbPack(ArraySegment<string> processed, ArraySegment<string> args)
+        {
+            if (args.Count < 3)
+            {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageVerbPack);
                 return 3;
@@ -71,7 +77,8 @@ namespace esp {
 
             var baseFiles = new List<(string path, string fullPath, long length)>(FlatFilesystemReader(args[1]));
 
-            foreach ((string id, IEnumerable<string> filterSrc) in LoadFilterStreamYaml(filterFs)) {
+            foreach ((string id, IEnumerable<string> filterSrc) in LoadFilterStreamYaml(filterFs))
+            {
                 using var outputFs = new FileStream(Path.Combine(args[2], $"{id}{MwExtension}"), FileMode.CreateNew,
                     FileAccess.ReadWrite);
 
@@ -88,7 +95,7 @@ namespace esp {
 
                 var fileHashes = new long[files.Count];
                 var fileHashedSet = new HashSet<string>();
-                
+
                 // TODO enhancement proc
                 /*
                  * Copy offsets except when dist is smaller than threshold1 or file bigger than threshold2
@@ -99,9 +106,11 @@ namespace esp {
                 var locations = Worst.WriteData(
                     files.Select<(string path, string fullPath, long length), Func<(Stream, bool, int?)>>(
                         (x, y)
-                            => () => {
+                            => () =>
+                            {
                                 var fs = new FileStream(x.fullPath, FileMode.Open, FileAccess.Read);
-                                if (fileHashedSet.Add(x.path)) {
+                                if (fileHashedSet.Add(x.path))
+                                {
                                     DataSizes.GetSize(processedSize += x.length, out double size, out string unit);
                                     DataSizes.GetSize(x.length, out double size2, out string unit2);
                                     Console.WriteLine(
@@ -134,11 +143,13 @@ namespace esp {
         }
 
         private static IEnumerable<(string path, string fullPath, long length)>
-            FlatFilesystemReader(string sourceDir) {
+            FlatFilesystemReader(string sourceDir)
+        {
             var dQueue = new Queue<string>();
             //var fQueue = new Queue<(string, long)>();
             var fInfo = new FileInfo(sourceDir);
-            if (fInfo.Exists) {
+            if (fInfo.Exists)
+            {
                 string? path = Path.GetFileName(sourceDir);
                 yield return (path, Path.Combine(sourceDir, path), fInfo.Length);
                 yield break;
@@ -146,11 +157,13 @@ namespace esp {
 
             dQueue.Enqueue(string.Empty);
 
-            while (dQueue.Count != 0) {
+            while (dQueue.Count != 0)
+            {
                 string src = dQueue.Dequeue();
                 string curDir = Path.Combine(sourceDir, src);
                 if (!Directory.Exists(curDir)) continue;
-                foreach (string file in Directory.EnumerateFiles(curDir)) {
+                foreach (string file in Directory.EnumerateFiles(curDir))
+                {
                     string path = Path.Combine(src, Path.GetFileName(file));
                     string fullPath = Path.Combine(sourceDir, path);
                     yield return (path, fullPath, new FileInfo(fullPath).Length);
@@ -161,13 +174,15 @@ namespace esp {
             }
         }
 
-        private static IEnumerable<(string id, IEnumerable<string> filters)> LoadFilterStreamYaml(Stream stream) {
+        private static IEnumerable<(string id, IEnumerable<string> filters)> LoadFilterStreamYaml(Stream stream)
+        {
             var yaml = new YamlStream();
             using var reader = new StreamReader(stream);
             yaml.Load(reader);
             if (!(yaml.Documents[0].RootNode is YamlSequenceNode mapping)) yield break;
-            foreach (var entry in mapping.Children) {
-                var eNode = (YamlMappingNode) entry;
+            foreach (var entry in mapping.Children)
+            {
+                var eNode = (YamlMappingNode)entry;
                 if (!eNode.Children.TryGetValue(new YamlScalarNode("id"), out var idNode)) continue;
                 if (!(idNode is YamlScalarNode idScalarNode)) continue;
                 if (!eNode.Children.TryGetValue(new YamlScalarNode("filters"), out var filterNode)) continue;
@@ -176,7 +191,8 @@ namespace esp {
             }
         }
 
-        private static IEnumerable<string> LoadFilterListYaml(YamlSequenceNode sequence) {
+        private static IEnumerable<string> LoadFilterListYaml(YamlSequenceNode sequence)
+        {
             foreach (var node in sequence.Children)
                 if (node is YamlScalarNode scalarNode)
                     yield return scalarNode.Value;
@@ -187,8 +203,10 @@ namespace esp {
         private const string UsageVerbUnpack =
             Program.ProgramName + " " + UtilityName + " " + NameVerbUnpack + " <mwfile> <target>";
 
-        private static int VerbUnpack(ArraySegment<string> processed, ArraySegment<string> args) {
-            if (args.Count < 2) {
+        private static int VerbUnpack(ArraySegment<string> processed, ArraySegment<string> args)
+        {
+            if (args.Count < 2)
+            {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageVerbUnpack);
                 return 3;
@@ -197,7 +215,8 @@ namespace esp {
             using var fs = new FileStream(args[0], FileMode.Open, FileAccess.Read);
             var mw = Worst.Read(fs);
 
-            foreach (string name in mw.GetEntries()) {
+            foreach (string name in mw.GetEntries())
+            {
                 mw.TryGetStream(name, out var stream);
                 DataSizes.GetSize(stream.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
@@ -215,8 +234,10 @@ namespace esp {
         private const string UsageVerbAlloctest =
             Program.ProgramName + " " + UtilityName + " " + NameVerbAlloctest + " <mwfile>";
 
-        private static int VerbAlloctest(ArraySegment<string> processed, ArraySegment<string> args) {
-            if (args.Count < 1) {
+        private static int VerbAlloctest(ArraySegment<string> processed, ArraySegment<string> args)
+        {
+            if (args.Count < 1)
+            {
                 Console.WriteLine(UsageBase);
                 Console.WriteLine(UsageVerbAlloctest);
                 return 3;
@@ -226,7 +247,8 @@ namespace esp {
             var mw = Worst.Read(fs);
 
             var ms = new MemoryStream();
-            foreach (string name in mw.GetEntries()) {
+            foreach (string name in mw.GetEntries())
+            {
                 mw.TryGetStream(name, out var stream);
                 DataSizes.GetSize(stream.Length, out double value, out string unit);
                 Console.WriteLine($"{value:N3}{unit} {name}");
