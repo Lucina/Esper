@@ -14,7 +14,7 @@ namespace Esper.Accelerator
         /// <param name="dll">Library name</param>
         /// <param name="version">Library version</param>
         /// <returns>Pointer to loaded library</returns>
-        IntPtr LoadLibrary(string basePath, string dll, string version);
+        IntPtr LoadLibrary(string basePath, string dll, string? version);
 
         /// <summary>
         /// Get procedure address

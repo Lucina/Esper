@@ -16,6 +16,11 @@ namespace Esper.Accelerator
         public static AcceleratePlatform DefaultPlatform { get; set; }
 
         /// <summary>
+        /// Global loader for <see cref="AcceleratePlatform.UnknownPlatform"/>
+        /// </summary>
+        public static IAccelerateLoader? GlobalUnknownPlatformLoader { get; set; }
+
+        /// <summary>
         /// Default library path
         /// </summary>
         public static string DefaultPath { get; set; }
@@ -34,17 +39,19 @@ namespace Esper.Accelerator
                     : AcceleratePlatform.WindowsX86;
                 DefaultPath = Path.Combine(DefaultPath, Environment.Is64BitProcess ? "win_x64" : "win_x86");
             }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 DefaultPlatform = AcceleratePlatform.MacosX64;
                 DefaultPath = Path.Combine(DefaultPath, "osx_x64");
             }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 DefaultPlatform = AcceleratePlatform.LinuxX64;
                 DefaultPath = Path.Combine(DefaultPath, "linux_x64");
+            }
+            else
+            {
+                DefaultPlatform = AcceleratePlatform.UnknownPlatform;
             }
         }
 
@@ -58,25 +65,22 @@ namespace Esper.Accelerator
         {
             if (platform == AcceleratePlatform.Default)
                 platform = DefaultPlatform;
-            if (!Loaders.TryGetValue(platform, out var value))
-            {
-                switch (platform)
-                {
-                    case AcceleratePlatform.MacosX64:
-                        value = new MacosLoader();
-                        break;
-                    case AcceleratePlatform.WindowsX64:
-                        value = new Win32Loader();
-                        break;
-                    case AcceleratePlatform.LinuxX64:
-                        value = new LinuxLoader();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(platform), platform, null);
-                }
+            // Always retrieve currently set loader at call time
+            if (platform == AcceleratePlatform.UnknownPlatform)
+                return GlobalUnknownPlatformLoader ?? throw new Exception(
+                    $"{nameof(GlobalUnknownPlatformLoader)} not defined, cannot provide default loader for {nameof(AcceleratePlatform.UnknownPlatform)}");
+            if (Loaders.TryGetValue(platform, out var value)) return value;
 
-                Loaders[platform] = value;
-            }
+            Loaders[platform] = value = platform switch
+            {
+                AcceleratePlatform.MacosX64 => new MacosLoader(),
+                AcceleratePlatform.WindowsX64 => new Win32Loader(),
+                AcceleratePlatform.WindowsX86 => new Win32Loader(),
+                AcceleratePlatform.LinuxX64 => new LinuxLoader(),
+                var x when x == AcceleratePlatform.Default || x == AcceleratePlatform.UnknownPlatform =>
+                throw new Exception(),
+                _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
+            };
 
             return value;
         }
@@ -90,11 +94,10 @@ namespace Esper.Accelerator
         /// <param name="basePath">Base library path or null for default</param>
         /// <returns>Pointer to loaded library</returns>
         /// <exception cref="ArgumentOutOfRangeException">If platform is invalid for enum or if both <paramref name="platform"/> and <see cref="DefaultPlatform"/> are <see cref="AcceleratePlatform.Default"/></exception>
-        public static IntPtr This(string dll, string version = null,
-            AcceleratePlatform platform = AcceleratePlatform.Default, string basePath = null)
+        public static IntPtr This(string dll, string? version = null,
+            AcceleratePlatform platform = AcceleratePlatform.Default, string? basePath = null)
         {
-            if (basePath == null)
-                basePath = DefaultPath;
+            basePath ??= DefaultPath;
             return This(platform).LoadLibrary(basePath, dll, version);
         }
 
@@ -106,11 +109,10 @@ namespace Esper.Accelerator
         /// <param name="version">Version to load</param>
         /// <param name="basePath">Base library path or null for default</param>
         /// <returns>Pointer to loaded library</returns>
-        public static IntPtr This(IAccelerateLoader customLoader, string dll, string version = null,
-            string basePath = null)
+        public static IntPtr This(IAccelerateLoader customLoader, string dll, string? version = null,
+            string? basePath = null)
         {
-            if (basePath == null)
-                basePath = DefaultPath;
+            basePath ??= DefaultPath;
             return customLoader.LoadLibrary(basePath, dll, version);
         }
 

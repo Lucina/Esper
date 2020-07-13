@@ -24,13 +24,10 @@ namespace Esper.Accelerator
         /// <param name="basePath">Base library path or null for default</param>
         /// <returns>Pointer to loaded library</returns>
         /// <exception cref="ArgumentOutOfRangeException">If platform is invalid for enum or if both <paramref name="platform"/> and <see cref="Accelerate.DefaultPlatform"/> are <see cref="AcceleratePlatform.Default"/></exception>
-        public AccelerateContext(string dll, string version = null,
-            AcceleratePlatform platform = AcceleratePlatform.Default, string basePath = null)
+        public AccelerateContext(string dll, string? version = null,
+            AcceleratePlatform platform = AcceleratePlatform.Default, string? basePath = null)
+            : this(Accelerate.This(platform), dll, version, basePath)
         {
-            if (basePath == null)
-                basePath = Accelerate.DefaultPath;
-            _loader = Accelerate.This(platform);
-            Lib = _loader.LoadLibrary(basePath, dll, version);
         }
 
         /// <summary>
@@ -41,12 +38,12 @@ namespace Esper.Accelerator
         /// <param name="version">Version to load</param>
         /// <param name="basePath">Base library path or null for default</param>
         /// <returns>Pointer to loaded library</returns>
-        public AccelerateContext(IAccelerateLoader customLoader, string dll, string version = null,
-            string basePath = null)
+        public AccelerateContext(IAccelerateLoader customLoader, string dll, string? version = null,
+            string? basePath = null)
         {
-            if (basePath == null)
-                basePath = Accelerate.DefaultPath;
-            Lib = customLoader.LoadLibrary(basePath, dll, version);
+            basePath ??= Accelerate.DefaultPath;
+            _loader = customLoader;
+            Lib = _loader.LoadLibrary(basePath, dll, version);
         }
 
         /// <summary>

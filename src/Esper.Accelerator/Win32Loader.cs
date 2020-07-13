@@ -15,11 +15,11 @@ namespace Esper.Accelerator
         [DllImport("kernel32", EntryPoint = "FreeLibrary", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool UnloadLibrary(IntPtr hModule);
 
-        IntPtr IAccelerateLoader.LoadLibrary(string basePath, string dll, string version)
+        IntPtr IAccelerateLoader.LoadLibrary(string basePath, string dll, string? version)
         {
             dll = $"{dll}.dll";
             if (basePath != null)
-                dll = System.IO.Path.GetFullPath(System.IO.Path.Combine(basePath, dll));
+                dll = System.IO.Path.Combine(basePath, dll);
             var handle = LoadLibrary(dll);
             if (handle == IntPtr.Zero)
                 throw new Win32Exception(Marshal.GetLastWin32Error());
