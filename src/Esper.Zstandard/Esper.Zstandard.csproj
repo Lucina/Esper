@@ -15,25 +15,25 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageVersion>0.3.2</PackageVersion>
+    <PackageVersion>0.3.3</PackageVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="lib\win_x64\zstd.dll">
+    <None Include="lib\win_x64\zstd.dll" Pack="true" PackagePath="lib/netstandard2.0/lib/win_x64">
       <Link>win_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="lib\win_x86\zstd.dll">
+    <None Include="lib\win_x86\zstd.dll" Pack="true" PackagePath="lib/netstandard2.0/lib/win_x86">
       <Link>win_x86\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="lib\linux_x64\libzstd.so.1.4.4">
+    <None Include="lib\linux_x64\libzstd.so.1.4.4" Pack="true" PackagePath="lib/netstandard2.0/lib/linux_x64">
       <Link>linux_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="lib\osx_x64\libzstd.1.4.4.dylib">
+    <None Include="lib\osx_x64\libzstd.1.4.4.dylib" Pack="true" PackagePath="lib/netstandard2.0/lib/osx_x64">
       <Link>osx_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
