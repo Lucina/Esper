@@ -9,22 +9,24 @@
     <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
     <Company>Lucina</Company>
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackageVersion>0.4.0</PackageVersion>
+    <LangVersion>9</LangVersion>
+    <Nullable>enable</Nullable>
     <PackOnBuild>true</PackOnBuild>
     <Owners>Lucina</Owners>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageVersion>0.3.3</PackageVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <LangVersion>8</LangVersion>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="NOTICE.Esper.txt" Pack="true" PackagePath="lib/netstandard2.0/">
+    <Content Include="NOTICE.Esper.Accelerator.txt">
       <Link>%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <PackagePath>contentFiles/any/any/win_x64/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
   </ItemGroup>
 
 </Project>

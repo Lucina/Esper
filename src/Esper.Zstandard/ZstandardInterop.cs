@@ -12,7 +12,7 @@ namespace Esper.Zstandard
         private const string LibName = "zstd";
         private const string LibVersion = "1.4.4";
 
-        private static readonly AccelerateContext _accel = new AccelerateContext(LibName, LibVersion);
+        private static readonly AccelerateContext _accel = new(LibName, LibVersion);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Buffer

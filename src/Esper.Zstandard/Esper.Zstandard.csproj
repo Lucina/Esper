@@ -10,44 +10,55 @@
     <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
     <Company>Lucina</Company>
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <PackageVersion>0.4.0</PackageVersion>
+    <LangVersion>9</LangVersion>
     <PackOnBuild>true</PackOnBuild>
     <Owners>Lucina</Owners>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageVersion>0.3.3</PackageVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <LangVersion>8</LangVersion>
+    <NoWarn>NU5100</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="lib\win_x64\zstd.dll" Pack="true" PackagePath="lib/netstandard2.0/lib/win_x64">
+    <Content Include="lib\win_x64\zstd.dll">
       <Link>win_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="lib\win_x86\zstd.dll" Pack="true" PackagePath="lib/netstandard2.0/lib/win_x86">
+      <PackagePath>contentFiles/any/any/win_x64/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="lib\win_x86\zstd.dll">
       <Link>win_x86\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="lib\linux_x64\libzstd.so.1.4.4" Pack="true" PackagePath="lib/netstandard2.0/lib/linux_x64">
+      <PackagePath>contentFiles/any/any/win_x86/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="lib\linux_x64\libzstd.so.1.4.4">
       <Link>linux_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="lib\osx_x64\libzstd.1.4.4.dylib" Pack="true" PackagePath="lib/netstandard2.0/lib/osx_x64">
+      <PackagePath>contentFiles/any/any/linux_x64/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="lib\osx_x64\libzstd.1.4.4.dylib">
       <Link>osx_x64\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <PackagePath>contentFiles/any/any/osx_x64/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="NOTICE.Esper.Zstandard.txt" Pack="true" PackagePath="lib/netstandard2.0/">
+    <Content Include="NOTICE.Esper.Zstandard.txt">
       <Link>%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <PackagePath>contentFiles/any/any/</PackagePath>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup>

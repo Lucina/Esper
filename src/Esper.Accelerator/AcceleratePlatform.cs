@@ -29,6 +29,7 @@
         /// Linux x64 (linux-x64)
         /// </summary>
         LinuxX64,
+
         /// <summary>
         /// Unknown platform - uses <see cref="Accelerate.GlobalUnknownPlatformLoader"/>
         /// </summary>

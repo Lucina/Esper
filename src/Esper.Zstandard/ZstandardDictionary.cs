@@ -18,10 +18,10 @@ namespace Esper.Zstandard
     /// <seealso cref="System.IDisposable" />
     public sealed class ZstandardDictionary : IDisposable
     {
-        private byte[] _dictionary;
+        private readonly byte[] _dictionary;
+        private readonly Dictionary<int, IntPtr> _cdicts = new();
+        private readonly object _lockObject = new();
         private IntPtr _ddict;
-        private Dictionary<int, IntPtr> _cdicts = new Dictionary<int, IntPtr>();
-        private object _lockObject = new object();
         private bool _isDisposed;
 
         /// <summary>
@@ -48,11 +48,9 @@ namespace Esper.Zstandard
         /// <param name="dictionaryStream">The dictionary stream.</param>
         public ZstandardDictionary(Stream dictionaryStream)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                dictionaryStream.CopyTo(memoryStream);
-                _dictionary = memoryStream.ToArray();
-            }
+            using var memoryStream = new MemoryStream();
+            dictionaryStream.CopyTo(memoryStream);
+            _dictionary = memoryStream.ToArray();
         }
 
         /// <summary>

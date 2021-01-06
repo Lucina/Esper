@@ -77,8 +77,8 @@ namespace Esper.Accelerator
                 AcceleratePlatform.WindowsX64 => new Win32Loader(),
                 AcceleratePlatform.WindowsX86 => new Win32Loader(),
                 AcceleratePlatform.LinuxX64 => new LinuxLoader(),
-                var x when x == AcceleratePlatform.Default || x == AcceleratePlatform.UnknownPlatform =>
-                throw new Exception(),
+                var x when x == AcceleratePlatform.Default =>
+                    throw new Exception(),
                 _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
             };
 
@@ -98,7 +98,7 @@ namespace Esper.Accelerator
             AcceleratePlatform platform = AcceleratePlatform.Default, string? basePath = null)
         {
             basePath ??= DefaultPath;
-            return This(platform).LoadLibrary(basePath, dll, version);
+            return This(platform).LoadLibrary(dll, basePath, version);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Esper.Accelerator
             string? basePath = null)
         {
             basePath ??= DefaultPath;
-            return customLoader.LoadLibrary(basePath, dll, version);
+            return customLoader.LoadLibrary(dll, basePath, version);
         }
 
         /// <summary>

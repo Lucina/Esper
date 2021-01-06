@@ -10,11 +10,11 @@ namespace Esper.Accelerator
         /// <summary>
         /// Load library
         /// </summary>
-        /// <param name="basePath">Filesystem base path</param>
         /// <param name="dll">Library name</param>
+        /// <param name="basePath">Filesystem base path</param>
         /// <param name="version">Library version</param>
         /// <returns>Pointer to loaded library</returns>
-        IntPtr LoadLibrary(string basePath, string dll, string? version);
+        IntPtr LoadLibrary(string dll, string? basePath, string? version);
 
         /// <summary>
         /// Get procedure address

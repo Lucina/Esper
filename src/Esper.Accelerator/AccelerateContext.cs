@@ -43,7 +43,7 @@ namespace Esper.Accelerator
         {
             basePath ??= Accelerate.DefaultPath;
             _loader = customLoader;
-            Lib = _loader.LoadLibrary(basePath, dll, version);
+            Lib = _loader.LoadLibrary(dll, basePath, version);
         }
 
         /// <summary>

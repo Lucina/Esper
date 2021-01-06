@@ -39,7 +39,7 @@ namespace Esper.Test
         {
             // Test a bunch of random location reads
             Random r = new Random();
-            byte[] a = new byte[4096*4];
+            byte[] a = new byte[4096 * 4];
             r.NextBytes(a);
             MemoryStream ms = new MemoryStream(a);
             using MultiBufferStream mbs = new MultiBufferStream(ms, true, 8, 128);
@@ -67,7 +67,7 @@ namespace Esper.Test
         {
             // Test a bunch of random location reads
             Random r = new Random();
-            byte[] a = new byte[4096*4];
+            byte[] a = new byte[4096 * 4];
             r.NextBytes(a);
             MemoryStream ms = new MemoryStream(a);
             using MultiBufferStream mbs = new MultiBufferStream(ms, false, 8, 128);

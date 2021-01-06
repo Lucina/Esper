@@ -18,12 +18,12 @@ namespace Esper.Accelerator
         [DllImport("libdl.so.2")]
         private static extern int dlclose(IntPtr handle);
 
-        static string DlError()
+        private static string? DlError()
         {
             return Marshal.PtrToStringAuto(dlerror());
         }
 
-        public IntPtr LoadLibrary(string basePath, string dll, string? version)
+        public IntPtr LoadLibrary(string dll, string? basePath, string? version)
         {
             dll = version != null ? $"lib{dll}.so.{version}" : $"lib{dll}.so";
 

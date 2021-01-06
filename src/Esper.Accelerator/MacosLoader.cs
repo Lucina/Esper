@@ -18,12 +18,12 @@ namespace Esper.Accelerator
         [DllImport("/usr/lib/libSystem.dylib")]
         private static extern int dlclose(IntPtr handle);
 
-        private static string DlError()
+        private static string? DlError()
         {
             return Marshal.PtrToStringAuto(dlerror());
         }
 
-        public IntPtr LoadLibrary(string basePath, string dll, string? version)
+        public IntPtr LoadLibrary(string dll, string? basePath, string? version)
         {
             dll = version != null ? $"lib{dll}.{version}.dylib" : $"lib{dll}.dylib";
 
