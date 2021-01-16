@@ -10,7 +10,7 @@
     <RepositoryUrl>https://github.com/Lucina/Esper</RepositoryUrl>
     <Company>Lucina</Company>
     <AssemblyVersion>1.0.0</AssemblyVersion>
-    <PackageVersion>0.4.0</PackageVersion>
+    <PackageVersion>0.4.1</PackageVersion>
     <LangVersion>9</LangVersion>
     <PackOnBuild>true</PackOnBuild>
     <Owners>Lucina</Owners>
